@@ -102,23 +102,20 @@ export default async function ClientPropertyDetailPage({
             </dl>
           </Card>
 
-          {property.property_status === "rented" && (
-            <Card title={t.property.rentalSection}>
-              <dl className="space-y-2 text-sm">
-                <Row label={t.property.monthlyRent} value={formatCurrency(property.monthly_rent)} />
-                <Row label={t.property.rentalEndDate} value={formatDate(property.rental_end_date)} />
-              </dl>
-            </Card>
-          )}
+          {/* Rental/sale history stays visible regardless of current status. */}
+          <Card title={t.property.rentalSection}>
+            <dl className="space-y-2 text-sm">
+              <Row label={t.property.monthlyRent} value={formatCurrency(property.monthly_rent)} />
+              <Row label={t.property.rentalEndDate} value={formatDate(property.rental_end_date)} />
+            </dl>
+          </Card>
 
-          {property.property_status === "sold" && (
-            <Card title={t.property.saleSection}>
-              <dl className="space-y-2 text-sm">
-                <Row label={t.property.salePrice} value={formatCurrency(property.sale_price)} />
-                <Row label={t.property.saleDate} value={formatDate(property.sale_date)} />
-              </dl>
-            </Card>
-          )}
+          <Card title={t.property.saleSection}>
+            <dl className="space-y-2 text-sm">
+              <Row label={t.property.salePrice} value={formatCurrency(property.sale_price)} />
+              <Row label={t.property.saleDate} value={formatDate(property.sale_date)} />
+            </dl>
+          </Card>
         </div>
       ) : (
         <Card

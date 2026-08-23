@@ -125,7 +125,7 @@ export function PropertyForm({
           onChange={(e) => setCustomerId(e.target.value)}
         >
           <option value="" disabled>
-            {t.common.search}…
+            {t.common.selectPlaceholder}
           </option>
           {customers.map((c) => (
             <option key={c.id} value={c.id}>
@@ -213,53 +213,60 @@ export function PropertyForm({
         <option value="sold">{t.property.statusSold}</option>
       </Select>
 
-      {status === "rented" && (
-        <fieldset className="rounded-md border border-slate-200 p-4">
-          <legend className="px-1 text-sm font-medium text-slate-700">
-            {t.property.rentalSection}
-          </legend>
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              id="monthly_rent"
-              type="number"
-              label={t.property.monthlyRent}
-              value={monthlyRent}
-              onChange={(e) => setMonthlyRent(e.target.value)}
-            />
-            <Input
-              id="rental_end_date"
-              type="date"
-              label={t.property.rentalEndDate}
-              value={rentalEndDate}
-              onChange={(e) => setRentalEndDate(e.target.value)}
-            />
-          </div>
-        </fieldset>
-      )}
+      {/*
+        Rental and sale info stay visible regardless of current status —
+        a property that was rented and is now sold must keep its rental
+        history visible/editable, not lose it from the UI. Only the
+        financing end date is genuinely conditional (it's meaningless,
+        and DB-constrained to NULL, when there's no financing at all).
+      */}
+      <fieldset className="rounded-md border border-slate-200 p-4">
+        <legend className="px-1 text-sm font-medium text-slate-700">
+          {t.property.rentalSection}
+        </legend>
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            id="monthly_rent"
+            type="number"
+            label={t.property.monthlyRent}
+            optional
+            value={monthlyRent}
+            onChange={(e) => setMonthlyRent(e.target.value)}
+          />
+          <Input
+            id="rental_end_date"
+            type="date"
+            label={t.property.rentalEndDate}
+            optional
+            value={rentalEndDate}
+            onChange={(e) => setRentalEndDate(e.target.value)}
+          />
+        </div>
+      </fieldset>
 
-      {status === "sold" && (
-        <fieldset className="rounded-md border border-slate-200 p-4">
-          <legend className="px-1 text-sm font-medium text-slate-700">
-            {t.property.saleSection}
-          </legend>
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              id="sale_price"
-              type="number"
-              label={t.property.salePrice}
-              value={salePrice}
-              onChange={(e) => setSalePrice(e.target.value)}
-            />
-            <Input
-              id="sale_date"
-              type="date"
-              label={t.property.saleDate}
-              value={saleDate}
-              onChange={(e) => setSaleDate(e.target.value)}
-            />
-          </div>
-        </fieldset>
-      )}
+      <fieldset className="rounded-md border border-slate-200 p-4">
+        <legend className="px-1 text-sm font-medium text-slate-700">
+          {t.property.saleSection}
+        </legend>
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            id="sale_price"
+            type="number"
+            label={t.property.salePrice}
+            optional
+            value={salePrice}
+            onChange={(e) => setSalePrice(e.target.value)}
+          />
+          <Input
+            id="sale_date"
+            type="date"
+            label={t.property.saleDate}
+            optional
+            value={saleDate}
+            onChange={(e) => setSaleDate(e.target.value)}
+          />
+        </div>
+      </fieldset>
 
       <Textarea
         id="notes"

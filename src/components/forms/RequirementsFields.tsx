@@ -40,7 +40,7 @@ export function RequirementsFields({
         }
       >
         <option value="" disabled>
-          {t.common.search}…
+          {t.common.selectPlaceholder}
         </option>
         {Object.entries(t.requirements.purchasePurposeOptions).map(([k, label]) => (
           <option key={k} value={k}>
@@ -196,7 +196,7 @@ export function RequirementsFields({
         }
       >
         <option value="" disabled>
-          {t.common.search}…
+          {t.common.selectPlaceholder}
         </option>
         {Object.entries(t.requirements.timelineOptions).map(([k, label]) => (
           <option key={k} value={k}>

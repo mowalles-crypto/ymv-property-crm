@@ -26,7 +26,7 @@ const en = {
     confirmPassword: "Confirm password",
     fullName: "Full name",
     phone1: "Primary phone",
-    phone2: "Secondary phone (optional)",
+    phone2: "Secondary phone",
     forgotPassword: "Forgot password?",
     resetPassword: "Reset password",
     sendResetLink: "Send reset link",
@@ -83,6 +83,7 @@ const en = {
     min: "Min",
     max: "Max",
     required: "This field is required",
+    selectPlaceholder: "Select…",
   },
   customer: {
     name: "Client name",
