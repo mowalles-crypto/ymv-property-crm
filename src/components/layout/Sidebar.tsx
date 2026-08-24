@@ -17,6 +17,7 @@ const adminLinks = [
 const clientLinks = [
   { href: "/client/dashboard", label: t.nav.dashboard },
   { href: "/client/properties", label: t.nav.myProperties },
+  { href: "/client/profile", label: t.nav.myProfile },
 ];
 
 export function Sidebar({ role }: { role: UserRole }) {

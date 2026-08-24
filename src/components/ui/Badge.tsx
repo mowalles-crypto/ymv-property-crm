@@ -1,4 +1,5 @@
 import type { CustomerStatus, PropertyStatus } from "@/lib/types/domain";
+import type { ExpiryStatus } from "@/lib/documents";
 import { t } from "@/lib/i18n";
 
 const base =
@@ -43,5 +44,27 @@ export function PropertyStatusBadge({ status }: { status: PropertyStatus }) {
     <span className={`${base} ${propertyStatusStyles[status]}`}>
       {propertyStatusLabel[status]}
     </span>
+  );
+}
+
+const expiryStyles: Record<ExpiryStatus, string> = {
+  valid: "bg-emerald-100 text-emerald-800",
+  expiring_soon: "bg-amber-100 text-amber-800",
+  expired: "bg-red-100 text-red-800",
+  missing: "bg-slate-100 text-slate-600",
+  no_expiry: "bg-emerald-100 text-emerald-800",
+};
+
+const expiryLabel: Record<ExpiryStatus, string> = {
+  valid: t.documents.statusValid,
+  expiring_soon: t.documents.statusExpiringSoon,
+  expired: t.documents.statusExpired,
+  missing: t.documents.statusMissing,
+  no_expiry: t.documents.statusValid,
+};
+
+export function DocumentExpiryBadge({ status }: { status: ExpiryStatus }) {
+  return (
+    <span className={`${base} ${expiryStyles[status]}`}>{expiryLabel[status]}</span>
   );
 }

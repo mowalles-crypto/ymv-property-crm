@@ -259,6 +259,145 @@ async function main() {
   }
 
   // =====================================================================
+  // Customer profile expansion: spouse, bank accounts, documents (table +
+  // Storage RLS). Requires scripts/seed-profile-expansion.mjs to have run
+  // (client-a has a spouse/bank/documents, client-b has a passport only).
+  // =====================================================================
+  const { data: spouseA } = await admin
+    .from("customer_spouses")
+    .select("id")
+    .eq("customer_id", customerA.id)
+    .maybeSingle();
+  const { data: bankA } = await admin
+    .from("customer_bank_accounts")
+    .select("id")
+    .eq("customer_id", customerA.id)
+    .maybeSingle();
+  const { data: docsA } = await admin
+    .from("customer_documents")
+    .select("id, storage_path, document_type")
+    .eq("customer_id", customerA.id);
+  const { data: docsB } = await admin
+    .from("customer_documents")
+    .select("id, storage_path, document_type")
+    .eq("customer_id", customerB.id);
+  const passportA = docsA?.find((d) => d.document_type === "customer_passport");
+  const passportB = docsB?.find((d) => d.document_type === "customer_passport");
+
+  if (spouseA && bankA && passportA && passportB) {
+    {
+      const { data, error } = await clientA
+        .from("customer_spouses")
+        .select("id")
+        .eq("id", spouseA.id);
+      record("Client A can read their own spouse record", !error && data.length === 1, error?.message);
+    }
+    {
+      const { data, error } = await clientB
+        .from("customer_spouses")
+        .select("id")
+        .eq("id", spouseA.id);
+      record(
+        "Client B cannot read Client A's spouse record",
+        !error && data.length === 0,
+        error?.message ?? `got ${data?.length} rows`
+      );
+    }
+    {
+      const { data, error } = await clientA
+        .from("customer_bank_accounts")
+        .select("id")
+        .eq("id", bankA.id);
+      record("Client A can read their own bank account", !error && data.length === 1, error?.message);
+    }
+    {
+      const { data, error } = await clientB
+        .from("customer_bank_accounts")
+        .select("id")
+        .eq("id", bankA.id);
+      record(
+        "Client B cannot read Client A's bank account",
+        !error && data.length === 0,
+        error?.message ?? `got ${data?.length} rows`
+      );
+    }
+    {
+      // Blocked writes on customer_spouses/customer_bank_accounts affect 0
+      // rows silently (no matching USING policy for that role), same as
+      // properties/customers above — verify via the admin client.
+      await clientA
+        .from("customer_bank_accounts")
+        .update({ bank_name: "Hacked Bank" })
+        .eq("id", bankA.id);
+      const { data: check } = await admin
+        .from("customer_bank_accounts")
+        .select("bank_name")
+        .eq("id", bankA.id)
+        .single();
+      record(
+        "Client A CANNOT edit their own bank account (read-only)",
+        check?.bank_name !== "Hacked Bank",
+        `bank_name is now ${check?.bank_name}`
+      );
+    }
+    {
+      const { data, error } = await clientB
+        .from("customer_documents")
+        .select("id")
+        .eq("id", passportA.id);
+      record(
+        "Client B cannot read Client A's document metadata",
+        !error && data.length === 0,
+        error?.message ?? `got ${data?.length} rows`
+      );
+    }
+    // --- Storage RLS on the actual files, not just the metadata rows ---
+    {
+      const { data, error } = await clientA.storage
+        .from("customer-documents")
+        .createSignedUrl(passportA.storage_path, 60);
+      record("Client A can get a signed URL for their own passport file", !error && !!data?.signedUrl, error?.message);
+    }
+    {
+      const { data, error } = await clientB.storage
+        .from("customer-documents")
+        .createSignedUrl(passportA.storage_path, 60);
+      record(
+        "Client B CANNOT get a signed URL for Client A's passport file",
+        !!error || !data?.signedUrl,
+        error ? undefined : "signed URL was generated — storage RLS is not enforced"
+      );
+    }
+    {
+      const { data, error } = await anon.storage
+        .from("customer-documents")
+        .createSignedUrl(passportB.storage_path, 60);
+      record(
+        "Unauthenticated request CANNOT get a signed URL for any passport file",
+        !!error || !data?.signedUrl,
+        error ? undefined : "signed URL was generated for an anonymous caller"
+      );
+    }
+    {
+      const { error } = await clientA.storage
+        .from("customer-documents")
+        .remove([passportA.storage_path]);
+      const { data: stillThere } = await admin
+        .from("customer_documents")
+        .select("id")
+        .eq("id", passportA.id)
+        .maybeSingle();
+      record(
+        "Client A CANNOT delete their own document file (admin-managed only)",
+        !!stillThere,
+        error ? undefined : stillThere ? undefined : "file was deleted by a non-admin client"
+      );
+    }
+  } else {
+    console.log("SKIP  profile-expansion tests — run scripts/seed-profile-expansion.mjs first");
+  }
+
+  // =====================================================================
   // Anonymous / unauthenticated
   // =====================================================================
   {

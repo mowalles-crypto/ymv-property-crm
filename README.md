@@ -12,6 +12,7 @@ A CRM for a property management company: clients, properties, per-property month
 - **Client registration**: multi-step wizard (account → contact → property requirements → confirmation) that creates the customer record and links it to the authenticated user server-side, via a `SECURITY DEFINER` RPC that derives identity from the session — never from client-supplied input.
 - **Property requirements questionnaire**: purchase purpose, property type(s), locations, budget, equity, financing, rooms, size, condition, timeline, desired yield, amenities, free text.
 - **Dashboards**: admin sees company-wide stats (clients, leads, properties by status, this year's rent/expenses/profit); clients see only their own.
+- **Customer profile documents**: passport (client + spouse), Power of Attorney, spouse/partner details, and Israeli bank account information, each in its own tab on the client detail page. Files live in a **private** Supabase Storage bucket — never a public URL — accessed only through short-lived signed URLs the caller's own RLS policy allows them to request. Expiry-aware status badges (Valid / Expiring soon / Expired / Missing) on passports and POA. Bank account numbers are masked (`****1234`) behind a "Reveal" toggle everywhere they're shown.
 - **i18n-ready**: all UI strings live in `src/lib/i18n/en.ts` behind a single `t` import — no strings scattered through components — so `he`/`es` dictionaries can be added later without touching component code. RTL is a one-line `dir` change away.
 
 ## Tech stack
@@ -28,18 +29,21 @@ src/
   components/
     ui/           Generic building blocks (Button, Card, Field, Badge, StatCard)
     layout/       AppShell, Sidebar, SignOutButton
-    forms/        Feature forms (CustomerForm, PropertyForm, AccountingTable, RegisterWizard, ...)
+    forms/        Feature forms (CustomerForm, PropertyForm, AccountingTable, RegisterWizard, DocumentCard, SpouseSection, BankAccountSection, ...)
   lib/
     supabase/     client.ts (browser), server.ts (RSC/route handlers), admin.ts (service role, server-only), middleware.ts (session refresh)
     auth.ts       requireProfile/requireAdmin/requireClient guards used at the top of pages/layouts
+    documents.ts  Storage path builder, file validation, expiry-status logic shared by admin + client document views
     i18n/         String dictionary
     types/        Generated DB types (database.ts) + hand-written domain/form types
   proxy.ts        Next.js 16 proxy (formerly "middleware") — refreshes the session and gates routes on every request
 supabase/
-  migrations/     Hand-written SQL migrations (schema, RLS, functions)
+  migrations/     Hand-written SQL migrations (schema, RLS, functions, Storage bucket + policies)
 scripts/
-  seed.mjs        Creates demo auth users + customers + properties + accounting + requirements
-  test-rls.mjs    Exercises RLS directly against the Data API as admin / two different clients / anonymous
+  seed.mjs                    Creates demo auth users + customers + properties + accounting + requirements
+  seed-more.mjs                A second wave of demo customers/properties (run after seed.mjs)
+  seed-profile-expansion.mjs  Demo passport/POA/spouse/bank-account data, incl. fake placeholder document uploads
+  test-rls.mjs                Exercises RLS + Storage policies directly against the API as admin / two clients / anonymous
 ```
 
 ## Environment variables
@@ -74,11 +78,12 @@ npm run dev
 
 ## Database schema
 
-Three migrations under `supabase/migrations/`:
+Four migrations under `supabase/migrations/`:
 
 1. **`init_schema.sql`** — enums, `customers`, `profiles`, `properties`, `property_accounting`, `property_requirements`; `total_expenses`/`profit` as Postgres `GENERATED ALWAYS AS ... STORED` columns; a unique `(property_id, year, month)` constraint; `handle_new_user()` trigger that gives every new auth user a bare `client` profile; the `complete_client_registration` RPC; the `create_accounting_year` RPC; and the initial RLS policies.
 2. **`fix_rls_policy_perf.sql`** — follow-up fixing two `supabase db advisors` findings: policies re-evaluating `auth.uid()` per row instead of once per query, and redundant overlapping SELECT policies (split into one policy per action instead of an admin "for all" + a separate "select own" policy).
 3. **`split_expense_descriptions.sql`** — replaced the single shared `expense_description` column on `property_accounting` with `expense_1_description` … `expense_5_description`, one per expense. `total_expenses`/`profit` are unaffected (they only ever summed the five amount columns).
+4. **`customer_profile_expansion.sql`** — `customer_spouses` (one per customer for now), `customer_bank_accounts` (schema allows several per customer; the UI treats the first as "the" account), `customer_documents` (metadata only — passport/POA/spouse-passport/bank-document/other, with a `document_type`+`customer_id` unique index making passport and POA singletons per customer, and a unique index on `spouse_id` making the spouse's passport a singleton per spouse), plus the private `customer-documents` Storage bucket and its RLS policies. See **Documents & Storage** below.
 
 No table exists per client/property/year — everything is normalized behind foreign keys, and the UI does the narrowing.
 
@@ -98,15 +103,25 @@ Every table has RLS enabled. Two `SECURITY DEFINER` helper functions in a `priva
 
 Policy shape per table: one `SELECT` policy (`is_admin() OR <ownership check>`), plus separate admin-only `INSERT`/`UPDATE`/`DELETE` policies. Clients get zero write policies on business tables (`customers`, `properties`, `property_accounting`) — their access is read-only by construction, not by hiding buttons in the UI.
 
-`supabase db advisors --linked --type security` reports one `WARN`, and it's expected: `complete_client_registration` is a `SECURITY DEFINER` function callable by any authenticated user. That's required for self-registration to work — it's guarded internally by reading `auth.uid()` and hardcoding `role`/`customer_status`, so there's no privilege-escalation path through it. All performance findings (`auth_rls_initplan`, `multiple_permissive_policies`) are resolved.
+`supabase db advisors --linked --type security` reports one `WARN`, and it's expected: `complete_client_registration` is a `SECURITY DEFINER` function callable by any authenticated user. That's required for self-registration to work — it's guarded internally by reading `auth.uid()` and hardcoding `role`/`customer_status`, so there's no privilege-escalation path through it. All performance findings (`auth_rls_initplan`, `multiple_permissive_policies`) are resolved. The advisor also flags `auth_leaked_password_protection` (Supabase's HaveIBeenPwned check is off by default on a new project) — unrelated to this app's own schema/RLS, toggle it in the dashboard under Auth settings when convenient.
+
+## Documents & Storage
+
+Passport, Power of Attorney, and spouse-passport files live in the **private** `customer-documents` Storage bucket (`public: false`, 10 MB limit, PDF/JPEG/PNG only) — never a public URL. Every object path is `{customer_id}/{document_type}/{uuid}.{ext}`, and the Storage RLS policies on `storage.objects` check `(storage.foldername(name))[1]` against the caller's own `customer_id` (or `private.is_admin()`) — the same ownership check used everywhere else, just applied to file paths instead of table rows. Only admin can INSERT/UPDATE/DELETE storage objects; both admin and the owning client can SELECT (needed to request a signed URL for their own file).
+
+The database only ever stores metadata (`customer_documents`): filename, mime type, size, structured passport fields (`passport_number`, `passport_country`) or POA fields (`document_date`, `expiry_date`, `notes`), and the storage path — never the file bytes. Viewing or downloading calls `supabase.storage.from('customer-documents').createSignedUrl(path, 60)` client-side, which only succeeds if the Storage RLS SELECT policy allows it; a 60-second signed URL is generated fresh on every click, nothing permanent is ever exposed. "Replace" deletes the old object + row and inserts a new one (the singleton unique index would otherwise conflict).
+
+Bank account numbers, the account-holder identifier, and IBAN are masked (`****1234`) by default in the UI, for both admin and client, behind a "Reveal" toggle — per the spec's requirement to treat bank data as sensitive even inside the authorized detail screen, not just in list views.
 
 ## Seed data
 
 ```bash
-npm run seed
+npm run seed                          # 1 admin + 5 customers + properties + accounting + requirements
+node scripts/seed-more.mjs            # optional: 5 more customers + properties (run after the above)
+node scripts/seed-profile-expansion.mjs  # passport/POA/spouse/bank-account demo data (fake placeholder PDFs)
 ```
 
-Creates 1 admin + 5 customers (3 with portal logins spanning lead/active/inactive status), 7 properties across every status, a year of accounting for the income-producing ones, and a requirements record for each customer. Requires `SUPABASE_SECRET_KEY` in `.env.local`. Demo login credentials are generated fresh each run, printed to the console, and written to `.secrets/demo-credentials.txt` (gitignored — never committed).
+Requires `SUPABASE_SECRET_KEY` in `.env.local`. Demo login credentials are generated fresh each run, printed to the console, and appended to `.secrets/demo-credentials.txt` (gitignored — never committed). All uploaded demo documents are clearly-fake placeholder PDFs generated in memory — no real personal data or documents are ever written to disk or committed.
 
 ## RLS testing
 
@@ -114,7 +129,7 @@ Creates 1 admin + 5 customers (3 with portal logins spanning lead/active/inactiv
 node scripts/test-rls.mjs
 ```
 
-Signs in as the seeded admin, two different clients, and an anonymous session, then runs 20 assertions straight against the Data API (no service role, no frontend) covering the checklist from the spec: admin full CRUD; a client reading only their own customer/properties/accounting/requirements; a client blocked from writing business data (verified by confirming the row is unchanged, since an RLS-blocked UPDATE/DELETE affects 0 rows rather than throwing); and two clients each unable to see the other's data. **Last run: 20/20 passed.**
+Signs in as the seeded admin, two different clients, and an anonymous session, then runs 30 assertions straight against the Data API and Storage API (no service role, no frontend) covering the checklist from the spec: admin full CRUD on every table; a client reading only their own customer/properties/accounting/requirements/spouse/bank-account/documents; a client blocked from writing business data (verified by confirming the row is unchanged, since an RLS-blocked UPDATE/DELETE affects 0 rows rather than throwing); two clients each unable to see the other's data or bank/spouse records; and — at the Storage level, not just the metadata table — a client unable to get a signed URL for another client's passport file even knowing its exact path, and an anonymous caller unable to get one for anybody's. **Last run: 30/30 passed.** (Requires `scripts/seed-profile-expansion.mjs` to have run for the document/spouse/bank assertions; they're skipped otherwise.)
 
 ## Internationalization
 
@@ -135,3 +150,5 @@ npm run lint      # ESLint
 - **Admin inviting a client**: an admin can create a `customers` record directly (e.g. a lead entered from a phone call), but there's no "send this person a portal invite" email flow yet — a client currently gets a login only via self-registration.
 - **Accounting edit UX**: edits are per-cell controlled inputs with a single "Save" that upserts changed months; there's no per-row autosave or optimistic-conflict handling if two admins edit the same property simultaneously.
 - **Only English is populated**; the i18n architecture is ready for `he`/`es` but those dictionaries don't exist yet.
+- **Passport numbers, bank details, etc. are not column-level-encrypted** in Postgres — security here relies on Supabase's encryption at rest, RLS (verified: nobody but the owning client or an admin can read the rows or the files), and the private Storage bucket. There is no application-layer encryption (e.g. `pgcrypto`) on top of that.
+- **Leaked password protection** is off by default on this Supabase project (flagged by `db advisors`, unrelated to the app's own schema) — worth enabling in the dashboard.

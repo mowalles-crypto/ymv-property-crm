@@ -14,6 +14,193 @@ export type Database = {
   }
   public: {
     Tables: {
+      customer_bank_accounts: {
+        Row: {
+          account_holder_identifier: string | null
+          account_holder_name: string
+          account_number: string
+          bank_name: string
+          bank_number: string
+          branch_name: string | null
+          branch_number: string
+          created_at: string
+          customer_id: string
+          iban: string | null
+          id: string
+          notes: string | null
+          swift_bic: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_holder_identifier?: string | null
+          account_holder_name: string
+          account_number: string
+          bank_name: string
+          bank_number: string
+          branch_name?: string | null
+          branch_number: string
+          created_at?: string
+          customer_id: string
+          iban?: string | null
+          id?: string
+          notes?: string | null
+          swift_bic?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_holder_identifier?: string | null
+          account_holder_name?: string
+          account_number?: string
+          bank_name?: string
+          bank_number?: string
+          branch_name?: string | null
+          branch_number?: string
+          created_at?: string
+          customer_id?: string
+          iban?: string | null
+          id?: string
+          notes?: string | null
+          swift_bic?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_bank_accounts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_documents: {
+        Row: {
+          created_at: string
+          customer_id: string
+          document_date: string | null
+          document_type: Database["public"]["Enums"]["document_type"]
+          expiry_date: string | null
+          file_size: number
+          id: string
+          mime_type: string
+          notes: string | null
+          original_filename: string
+          passport_country: string | null
+          passport_number: string | null
+          spouse_id: string | null
+          storage_path: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          document_date?: string | null
+          document_type: Database["public"]["Enums"]["document_type"]
+          expiry_date?: string | null
+          file_size: number
+          id?: string
+          mime_type: string
+          notes?: string | null
+          original_filename: string
+          passport_country?: string | null
+          passport_number?: string | null
+          spouse_id?: string | null
+          storage_path: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          document_date?: string | null
+          document_type?: Database["public"]["Enums"]["document_type"]
+          expiry_date?: string | null
+          file_size?: number
+          id?: string
+          mime_type?: string
+          notes?: string | null
+          original_filename?: string
+          passport_country?: string | null
+          passport_number?: string | null
+          spouse_id?: string | null
+          storage_path?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_documents_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_documents_spouse_id_fkey"
+            columns: ["spouse_id"]
+            isOneToOne: false
+            referencedRelation: "customer_spouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_spouses: {
+        Row: {
+          created_at: string
+          customer_id: string
+          email: string | null
+          full_name: string
+          id: string
+          notes: string | null
+          passport_country: string | null
+          passport_expiry_date: string | null
+          passport_issue_date: string | null
+          passport_number: string | null
+          phone_1: string | null
+          phone_2: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          email?: string | null
+          full_name: string
+          id?: string
+          notes?: string | null
+          passport_country?: string | null
+          passport_expiry_date?: string | null
+          passport_issue_date?: string | null
+          passport_number?: string | null
+          phone_1?: string | null
+          phone_2?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          notes?: string | null
+          passport_country?: string | null
+          passport_expiry_date?: string | null
+          passport_issue_date?: string | null
+          passport_number?: string | null
+          phone_1?: string | null
+          phone_2?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_spouses_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           created_at: string
@@ -403,6 +590,12 @@ export type Database = {
     }
     Enums: {
       customer_status: "lead" | "active" | "inactive"
+      document_type:
+        | "customer_passport"
+        | "spouse_passport"
+        | "power_of_attorney"
+        | "bank_document"
+        | "other"
       financing_requirement: "yes" | "no" | "not_sure"
       property_condition:
         | "new_from_developer"
@@ -560,6 +753,13 @@ export const Constants = {
   public: {
     Enums: {
       customer_status: ["lead", "active", "inactive"],
+      document_type: [
+        "customer_passport",
+        "spouse_passport",
+        "power_of_attorney",
+        "bank_document",
+        "other",
+      ],
       financing_requirement: ["yes", "no", "not_sure"],
       property_condition: [
         "new_from_developer",
