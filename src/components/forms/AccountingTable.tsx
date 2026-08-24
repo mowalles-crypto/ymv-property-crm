@@ -13,23 +13,64 @@ type Row = Pick<
   | "month"
   | "rent_received"
   | "expense_1"
+  | "expense_1_description"
   | "expense_2"
+  | "expense_2_description"
   | "expense_3"
+  | "expense_3_description"
   | "expense_4"
+  | "expense_4_description"
   | "expense_5"
-  | "expense_description"
+  | "expense_5_description"
   | "total_expenses"
   | "profit"
 >;
 
-const numericFields = [
-  "rent_received",
-  "expense_1",
-  "expense_2",
-  "expense_3",
-  "expense_4",
-  "expense_5",
-] as const;
+type AmountField = "expense_1" | "expense_2" | "expense_3" | "expense_4" | "expense_5";
+type DescriptionField =
+  | "expense_1_description"
+  | "expense_2_description"
+  | "expense_3_description"
+  | "expense_4_description"
+  | "expense_5_description";
+
+const expenseFields: {
+  amount: AmountField;
+  description: DescriptionField;
+  label: string;
+  descriptionLabel: string;
+}[] = [
+  {
+    amount: "expense_1",
+    description: "expense_1_description",
+    label: t.accounting.expense1,
+    descriptionLabel: t.accounting.expense1Description,
+  },
+  {
+    amount: "expense_2",
+    description: "expense_2_description",
+    label: t.accounting.expense2,
+    descriptionLabel: t.accounting.expense2Description,
+  },
+  {
+    amount: "expense_3",
+    description: "expense_3_description",
+    label: t.accounting.expense3,
+    descriptionLabel: t.accounting.expense3Description,
+  },
+  {
+    amount: "expense_4",
+    description: "expense_4_description",
+    label: t.accounting.expense4,
+    descriptionLabel: t.accounting.expense4Description,
+  },
+  {
+    amount: "expense_5",
+    description: "expense_5_description",
+    label: t.accounting.expense5,
+    descriptionLabel: t.accounting.expense5Description,
+  },
+];
 
 export function AccountingTable({
   propertyId,
@@ -54,24 +95,28 @@ export function AccountingTable({
     return map;
   }, [rows]);
 
-  function updateField(
-    month: number,
-    field: (typeof numericFields)[number] | "expense_description",
-    value: string
-  ) {
+  function recalculate(row: Row): Row {
+    const total = expenseFields.reduce(
+      (sum, f) => sum + (Number(row[f.amount]) || 0),
+      0
+    );
+    return {
+      ...row,
+      total_expenses: total,
+      profit: (Number(row.rent_received) || 0) - total,
+    };
+  }
+
+  function updateAmount(month: number, field: "rent_received" | AmountField, value: string) {
     setRows((prev) =>
-      prev.map((r) => {
-        if (r.month !== month) return r;
-        const updated = { ...r, [field]: value } as Row;
-        if (field !== "expense_description") {
-          const total = numericFields
-            .filter((f) => f !== "rent_received")
-            .reduce((sum, f) => sum + (Number(updated[f]) || 0), 0);
-          updated.total_expenses = total;
-          updated.profit = (Number(updated.rent_received) || 0) - total;
-        }
-        return updated;
-      })
+      prev.map((r) => (r.month === month ? recalculate({ ...r, [field]: value }) : r))
+    );
+    setDirty((prev) => new Set(prev).add(String(month)));
+  }
+
+  function updateDescription(month: number, field: DescriptionField, value: string) {
+    setRows((prev) =>
+      prev.map((r) => (r.month === month ? { ...r, [field]: value } : r))
     );
     setDirty((prev) => new Set(prev).add(String(month)));
   }
@@ -105,11 +150,15 @@ export function AccountingTable({
       month: r.month,
       rent_received: Number(r.rent_received) || 0,
       expense_1: Number(r.expense_1) || 0,
+      expense_1_description: r.expense_1_description,
       expense_2: Number(r.expense_2) || 0,
+      expense_2_description: r.expense_2_description,
       expense_3: Number(r.expense_3) || 0,
+      expense_3_description: r.expense_3_description,
       expense_4: Number(r.expense_4) || 0,
+      expense_4_description: r.expense_4_description,
       expense_5: Number(r.expense_5) || 0,
-      expense_description: r.expense_description,
+      expense_5_description: r.expense_5_description,
     }));
 
     const { error } = await supabase
@@ -125,16 +174,14 @@ export function AccountingTable({
   }
 
   const totals = rows.reduce(
-    (acc, r) => ({
-      rent_received: acc.rent_received + (Number(r.rent_received) || 0),
-      expense_1: acc.expense_1 + (Number(r.expense_1) || 0),
-      expense_2: acc.expense_2 + (Number(r.expense_2) || 0),
-      expense_3: acc.expense_3 + (Number(r.expense_3) || 0),
-      expense_4: acc.expense_4 + (Number(r.expense_4) || 0),
-      expense_5: acc.expense_5 + (Number(r.expense_5) || 0),
-      total_expenses: acc.total_expenses + (Number(r.total_expenses) || 0),
-      profit: acc.profit + (Number(r.profit) || 0),
-    }),
+    (acc, r) => {
+      const next = { ...acc };
+      next.rent_received += Number(r.rent_received) || 0;
+      for (const f of expenseFields) next[f.amount] += Number(r[f.amount]) || 0;
+      next.total_expenses += Number(r.total_expenses) || 0;
+      next.profit += Number(r.profit) || 0;
+      return next;
+    },
     {
       rent_received: 0,
       expense_1: 0,
@@ -144,7 +191,7 @@ export function AccountingTable({
       expense_5: 0,
       total_expenses: 0,
       profit: 0,
-    }
+    } as Record<"rent_received" | AmountField | "total_expenses" | "profit", number>
   );
 
   if (rows.length === 0) {
@@ -161,26 +208,29 @@ export function AccountingTable({
     );
   }
 
-  const cellClass = editable
-    ? "w-24 rounded border border-transparent bg-transparent px-1.5 py-1 text-right text-sm focus:border-indigo-400 focus:bg-white focus:outline-none"
-    : "px-1.5 py-1 text-right text-sm";
+  const amountInputClass =
+    "w-full rounded border border-transparent bg-transparent px-1.5 py-0.5 text-right text-sm focus:border-indigo-400 focus:bg-white focus:outline-none";
+  const descInputClass =
+    "w-full rounded border border-transparent bg-transparent px-1.5 py-0.5 text-xs text-slate-500 placeholder:text-slate-400 focus:border-indigo-400 focus:bg-white focus:outline-none";
 
   return (
     <div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[900px] text-sm">
+        <table className="w-full min-w-[1100px] text-sm">
           <thead>
             <tr className="border-b border-slate-200 text-xs uppercase text-slate-500">
-              <th className="py-2 pr-2 text-left">{t.accounting.month}</th>
-              <th className="py-2 pr-2 text-right">{t.accounting.rentReceived}</th>
-              <th className="py-2 pr-2 text-right">{t.accounting.expense1}</th>
-              <th className="py-2 pr-2 text-right">{t.accounting.expense2}</th>
-              <th className="py-2 pr-2 text-right">{t.accounting.expense3}</th>
-              <th className="py-2 pr-2 text-right">{t.accounting.expense4}</th>
-              <th className="py-2 pr-2 text-right">{t.accounting.expense5}</th>
-              <th className="py-2 pr-2 text-left">{t.accounting.expenseDescription}</th>
-              <th className="py-2 pr-2 text-right">{t.accounting.totalExpenses}</th>
-              <th className="py-2 pr-2 text-right">{t.accounting.profit}</th>
+              <th className="py-2 pr-3 text-left align-bottom">{t.accounting.month}</th>
+              <th className="py-2 pr-3 text-right align-bottom">{t.accounting.rentReceived}</th>
+              {expenseFields.map((f) => (
+                <th key={f.amount} className="py-2 pr-3 text-right align-bottom" style={{ minWidth: 150 }}>
+                  {f.label}
+                  <div className="mt-0.5 text-[10px] font-normal normal-case text-slate-400">
+                    {f.descriptionLabel}
+                  </div>
+                </th>
+              ))}
+              <th className="py-2 pr-3 text-right align-bottom">{t.accounting.totalExpenses}</th>
+              <th className="py-2 pr-3 text-right align-bottom">{t.accounting.profit}</th>
             </tr>
           </thead>
           <tbody>
@@ -190,40 +240,54 @@ export function AccountingTable({
               if (!row) return null;
               return (
                 <tr key={month} className="border-b border-slate-100 hover:bg-slate-50">
-                  <td className="py-1 pr-2 font-medium text-slate-700">{label}</td>
-                  {numericFields.map((f) => (
-                    <td key={f} className="py-1 pr-2">
+                  <td className="py-1.5 pr-3 align-top font-medium text-slate-700">{label}</td>
+                  <td className="py-1.5 pr-3 align-top">
+                    {editable ? (
+                      <input
+                        type="number"
+                        className={amountInputClass}
+                        value={row.rent_received ?? 0}
+                        onChange={(e) => updateAmount(month, "rent_received", e.target.value)}
+                      />
+                    ) : (
+                      <div className="px-1.5 py-0.5 text-right">{formatCurrency(row.rent_received)}</div>
+                    )}
+                  </td>
+                  {expenseFields.map((f) => (
+                    <td key={f.amount} className="py-1.5 pr-3 align-top">
                       {editable ? (
-                        <input
-                          type="number"
-                          className={cellClass}
-                          value={row[f] ?? 0}
-                          onChange={(e) => updateField(month, f, e.target.value)}
-                        />
+                        <div className="space-y-0.5">
+                          <input
+                            type="number"
+                            className={amountInputClass}
+                            value={row[f.amount] ?? 0}
+                            onChange={(e) => updateAmount(month, f.amount, e.target.value)}
+                          />
+                          <input
+                            type="text"
+                            placeholder={f.descriptionLabel}
+                            className={descInputClass}
+                            value={row[f.description] ?? ""}
+                            onChange={(e) => updateDescription(month, f.description, e.target.value)}
+                          />
+                        </div>
                       ) : (
-                        <div className={cellClass}>{formatCurrency(row[f])}</div>
+                        <div className="space-y-0.5">
+                          <div className="px-1.5 py-0.5 text-right">{formatCurrency(row[f.amount])}</div>
+                          {row[f.description] && (
+                            <div className="px-1.5 text-right text-xs text-slate-500">
+                              {row[f.description]}
+                            </div>
+                          )}
+                        </div>
                       )}
                     </td>
                   ))}
-                  <td className="py-1 pr-2">
-                    {editable ? (
-                      <input
-                        type="text"
-                        className="w-full rounded border border-transparent bg-transparent px-1.5 py-1 text-sm focus:border-indigo-400 focus:bg-white focus:outline-none"
-                        value={row.expense_description ?? ""}
-                        onChange={(e) =>
-                          updateField(month, "expense_description", e.target.value)
-                        }
-                      />
-                    ) : (
-                      <span className="text-slate-500">{row.expense_description ?? "—"}</span>
-                    )}
-                  </td>
-                  <td className="py-1 pr-2 text-right text-slate-600">
+                  <td className="py-1.5 pr-3 align-top text-right text-slate-600">
                     {formatCurrency(row.total_expenses)}
                   </td>
                   <td
-                    className={`py-1 pr-2 text-right font-medium ${
+                    className={`py-1.5 pr-3 align-top text-right font-medium ${
                       (row.profit ?? 0) < 0 ? "text-red-600" : "text-emerald-700"
                     }`}
                   >
@@ -235,16 +299,15 @@ export function AccountingTable({
           </tbody>
           <tfoot>
             <tr className="border-t-2 border-slate-300 font-semibold text-slate-900">
-              <td className="py-2 pr-2">{t.common.total}</td>
-              <td className="py-2 pr-2 text-right">{formatCurrency(totals.rent_received)}</td>
-              <td className="py-2 pr-2 text-right">{formatCurrency(totals.expense_1)}</td>
-              <td className="py-2 pr-2 text-right">{formatCurrency(totals.expense_2)}</td>
-              <td className="py-2 pr-2 text-right">{formatCurrency(totals.expense_3)}</td>
-              <td className="py-2 pr-2 text-right">{formatCurrency(totals.expense_4)}</td>
-              <td className="py-2 pr-2 text-right">{formatCurrency(totals.expense_5)}</td>
-              <td className="py-2 pr-2"></td>
-              <td className="py-2 pr-2 text-right">{formatCurrency(totals.total_expenses)}</td>
-              <td className="py-2 pr-2 text-right">{formatCurrency(totals.profit)}</td>
+              <td className="py-2 pr-3">{t.common.total}</td>
+              <td className="py-2 pr-3 text-right">{formatCurrency(totals.rent_received)}</td>
+              {expenseFields.map((f) => (
+                <td key={f.amount} className="py-2 pr-3 text-right">
+                  {formatCurrency(totals[f.amount])}
+                </td>
+              ))}
+              <td className="py-2 pr-3 text-right">{formatCurrency(totals.total_expenses)}</td>
+              <td className="py-2 pr-3 text-right">{formatCurrency(totals.profit)}</td>
             </tr>
           </tfoot>
         </table>

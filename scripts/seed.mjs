@@ -108,18 +108,25 @@ async function insertRequirements(fields) {
 }
 
 async function seedYearOfAccounting(propertyId, baseRent, baseExpense) {
-  const rows = Array.from({ length: 12 }, (_, i) => ({
-    property_id: propertyId,
-    year: currentYear,
-    month: i + 1,
-    rent_received: baseRent + (i % 3 === 0 ? 0 : 0),
-    expense_1: baseExpense,
-    expense_2: i % 4 === 0 ? 250 : 0,
-    expense_3: 0,
-    expense_4: 0,
-    expense_5: 0,
-    expense_description: i % 4 === 0 ? "Building maintenance fee" : null,
-  }));
+  const rows = Array.from({ length: 12 }, (_, i) => {
+    const hasMaintenance = i % 4 === 0;
+    return {
+      property_id: propertyId,
+      year: currentYear,
+      month: i + 1,
+      rent_received: baseRent,
+      expense_1: baseExpense,
+      expense_1_description: baseExpense > 0 ? "Property management fee" : null,
+      expense_2: hasMaintenance ? 250 : 0,
+      expense_2_description: hasMaintenance ? "Building maintenance fee" : null,
+      expense_3: 0,
+      expense_3_description: null,
+      expense_4: 0,
+      expense_4_description: null,
+      expense_5: 0,
+      expense_5_description: null,
+    };
+  });
   const { error } = await supabase.from("property_accounting").insert(rows);
   if (error) throw new Error(`insert accounting for ${propertyId}: ${error.message}`);
 }

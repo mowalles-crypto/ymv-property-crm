@@ -154,11 +154,15 @@ export type Database = {
         Row: {
           created_at: string
           expense_1: number
+          expense_1_description: string | null
           expense_2: number
+          expense_2_description: string | null
           expense_3: number
+          expense_3_description: string | null
           expense_4: number
+          expense_4_description: string | null
           expense_5: number
-          expense_description: string | null
+          expense_5_description: string | null
           id: string
           month: number
           notes: string | null
@@ -172,11 +176,15 @@ export type Database = {
         Insert: {
           created_at?: string
           expense_1?: number
+          expense_1_description?: string | null
           expense_2?: number
+          expense_2_description?: string | null
           expense_3?: number
+          expense_3_description?: string | null
           expense_4?: number
+          expense_4_description?: string | null
           expense_5?: number
-          expense_description?: string | null
+          expense_5_description?: string | null
           id?: string
           month: number
           notes?: string | null
@@ -190,11 +198,15 @@ export type Database = {
         Update: {
           created_at?: string
           expense_1?: number
+          expense_1_description?: string | null
           expense_2?: number
+          expense_2_description?: string | null
           expense_3?: number
+          expense_3_description?: string | null
           expense_4?: number
+          expense_4_description?: string | null
           expense_5?: number
-          expense_description?: string | null
+          expense_5_description?: string | null
           id?: string
           month?: number
           notes?: string | null
@@ -362,11 +374,15 @@ export type Database = {
         Returns: {
           created_at: string
           expense_1: number
+          expense_1_description: string | null
           expense_2: number
+          expense_2_description: string | null
           expense_3: number
+          expense_3_description: string | null
           expense_4: number
+          expense_4_description: string | null
           expense_5: number
-          expense_description: string | null
+          expense_5_description: string | null
           id: string
           month: number
           notes: string | null

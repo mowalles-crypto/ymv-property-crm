@@ -74,10 +74,11 @@ npm run dev
 
 ## Database schema
 
-Two migrations under `supabase/migrations/`:
+Three migrations under `supabase/migrations/`:
 
 1. **`init_schema.sql`** — enums, `customers`, `profiles`, `properties`, `property_accounting`, `property_requirements`; `total_expenses`/`profit` as Postgres `GENERATED ALWAYS AS ... STORED` columns; a unique `(property_id, year, month)` constraint; `handle_new_user()` trigger that gives every new auth user a bare `client` profile; the `complete_client_registration` RPC; the `create_accounting_year` RPC; and the initial RLS policies.
 2. **`fix_rls_policy_perf.sql`** — follow-up fixing two `supabase db advisors` findings: policies re-evaluating `auth.uid()` per row instead of once per query, and redundant overlapping SELECT policies (split into one policy per action instead of an admin "for all" + a separate "select own" policy).
+3. **`split_expense_descriptions.sql`** — replaced the single shared `expense_description` column on `property_accounting` with `expense_1_description` … `expense_5_description`, one per expense. `total_expenses`/`profit` are unaffected (they only ever summed the five amount columns).
 
 No table exists per client/property/year — everything is normalized behind foreign keys, and the UI does the narrowing.
 
