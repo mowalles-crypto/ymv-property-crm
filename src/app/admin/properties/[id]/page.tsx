@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/Button";
 import { PropertyStatusBadge } from "@/components/ui/Badge";
 import { DeleteButton } from "@/components/forms/DeleteButton";
 import { AccountingTable } from "@/components/forms/AccountingTable";
+import { TransactionsTable } from "@/components/forms/TransactionsTable";
 import { YearSelector } from "@/components/forms/YearSelector";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { t } from "@/lib/i18n";
-import type { PropertyAccounting } from "@/lib/types/domain";
+import type { PropertyAccounting, PropertyTransaction } from "@/lib/types/domain";
 
 export default async function AdminPropertyDetailPage({
   params,
@@ -20,7 +21,7 @@ export default async function AdminPropertyDetailPage({
 }) {
   const { id } = await params;
   const { tab, year: yearParam } = await searchParams;
-  const activeTab = tab === "accounting" ? "accounting" : "details";
+  const activeTab = tab === "accounting" ? "accounting" : tab === "activity" ? "activity" : "details";
   const year = yearParam ? parseInt(yearParam, 10) : new Date().getFullYear();
 
   const supabase = await createClient();
@@ -44,6 +45,16 @@ export default async function AdminPropertyDetailPage({
       .eq("year", year)
       .order("month");
     accountingRows = data ?? [];
+  }
+
+  let transactions: PropertyTransaction[] = [];
+  if (activeTab === "activity") {
+    const { data } = await supabase
+      .from("property_transactions")
+      .select("*")
+      .eq("property_id", id)
+      .order("transaction_date", { ascending: false });
+    transactions = data ?? [];
   }
 
   const currentYear = new Date().getFullYear();
@@ -101,6 +112,16 @@ export default async function AdminPropertyDetailPage({
         >
           {t.property.accountingTab}
         </Link>
+        <Link
+          href={`/admin/properties/${id}?tab=activity`}
+          className={`border-b-2 px-4 py-2 text-sm font-medium ${
+            activeTab === "activity"
+              ? "border-indigo-600 text-indigo-700"
+              : "border-transparent text-slate-500 hover:text-slate-700"
+          }`}
+        >
+          {t.nav.financialActivity}
+        </Link>
       </div>
 
       {activeTab === "details" ? (
@@ -147,7 +168,7 @@ export default async function AdminPropertyDetailPage({
             </p>
           </Card>
         </div>
-      ) : (
+      ) : activeTab === "accounting" ? (
         <Card
           title={`${t.property.accountingTab} — ${customer?.customer_name}`}
           action={<YearSelector year={year} basePath={`/admin/properties/${id}`} years={years} />}
@@ -158,6 +179,10 @@ export default async function AdminPropertyDetailPage({
             initialRows={accountingRows}
             editable
           />
+        </Card>
+      ) : (
+        <Card title={`${t.nav.financialActivity} — ${customer?.customer_name}`}>
+          <TransactionsTable propertyId={id} transactions={transactions} />
         </Card>
       )}
     </div>

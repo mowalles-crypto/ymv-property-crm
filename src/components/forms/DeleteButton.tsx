@@ -12,7 +12,7 @@ export function DeleteButton({
   redirectTo,
   confirmMessage,
 }: {
-  table: "customers" | "properties" | "property_accounting";
+  table: "customers" | "properties" | "property_accounting" | "investment_offers";
   id: string;
   redirectTo: string;
   confirmMessage: string;

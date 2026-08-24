@@ -33,10 +33,10 @@ export async function requireProfile(): Promise<Profile> {
   return profile;
 }
 
-/** Redirects non-admins to /client/dashboard. Use at the top of admin pages. */
+/** Redirects non-admins to /client/home. Use at the top of admin pages. */
 export async function requireAdmin(): Promise<Profile> {
   const profile = await requireProfile();
-  if (profile.role !== "admin") redirect("/client/dashboard");
+  if (profile.role !== "admin") redirect("/client/home");
   return profile;
 }
 

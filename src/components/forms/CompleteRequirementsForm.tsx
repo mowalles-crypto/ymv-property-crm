@@ -48,7 +48,7 @@ export function CompleteRequirementsForm() {
       return;
     }
 
-    router.push("/client/dashboard");
+    router.push("/client/home");
     router.refresh();
   }
 

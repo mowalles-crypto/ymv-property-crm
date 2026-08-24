@@ -90,6 +90,41 @@ export function buildRegistrationRpcArgs(
   return args as unknown as RegistrationRpcArgs;
 }
 
+/** Plain column-named payload for updating an existing property_requirements
+ * row directly (as opposed to the p_-prefixed RPC argument shape above). */
+export function requirementsFormToUpdatePayload(f: RequirementsFormState) {
+  return {
+    purchase_purpose: f.purchase_purpose as PurchasePurpose,
+    property_types: f.property_types,
+    preferred_locations: f.preferred_locations
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean),
+    budget_min: numOrNull(f.budget_min),
+    budget_max: numOrNull(f.budget_max),
+    available_equity: numOrNull(f.available_equity),
+    financing_required: f.financing_required,
+    financing_amount: numOrNull(f.financing_amount),
+    financing_percentage: numOrNull(f.financing_percentage),
+    rooms_min: numOrNull(f.rooms_min),
+    rooms_max: numOrNull(f.rooms_max),
+    size_min: numOrNull(f.size_min),
+    size_max: numOrNull(f.size_max),
+    property_condition: f.property_condition,
+    purchase_timeline: f.purchase_timeline as PurchaseTimeline,
+    desired_yield: numOrNull(f.desired_yield),
+    wants_balcony: f.wants_balcony,
+    wants_parking: f.wants_parking,
+    wants_storage: f.wants_storage,
+    wants_elevator: f.wants_elevator,
+    wants_accessibility: f.wants_accessibility,
+    preferred_floor: f.preferred_floor || null,
+    wants_public_transport_proximity: f.wants_public_transport_proximity,
+    other_preferences: f.other_preferences || null,
+    additional_requirements: f.additional_requirements || null,
+  };
+}
+
 function requirementsFormToRpcArgs(f: RequirementsFormState) {
   return {
     p_purchase_purpose: f.purchase_purpose as PurchasePurpose,

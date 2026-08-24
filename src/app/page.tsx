@@ -7,5 +7,5 @@ export default async function Home() {
   if (!profile) redirect("/login");
   if (profile.role === "admin") redirect("/admin/dashboard");
   if (!profile.customer_id) redirect("/register/complete-requirements");
-  redirect("/client/dashboard");
+  redirect("/client/home");
 }

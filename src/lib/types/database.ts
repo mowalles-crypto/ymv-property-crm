@@ -14,6 +14,175 @@ export type Database = {
   }
   public: {
     Tables: {
+      acquisition_cost_rules: {
+        Row: {
+          active: boolean
+          calculation_type: Database["public"]["Enums"]["cost_calculation_type"]
+          conditions: string | null
+          cost_type: Database["public"]["Enums"]["acquisition_cost_type"]
+          created_at: string
+          effective_from: string
+          effective_to: string | null
+          fixed_amount: number | null
+          id: string
+          maximum_amount: number | null
+          minimum_amount: number | null
+          notes: string | null
+          percentage_rate: number | null
+          source: string | null
+          tiers: Json | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          calculation_type: Database["public"]["Enums"]["cost_calculation_type"]
+          conditions?: string | null
+          cost_type: Database["public"]["Enums"]["acquisition_cost_type"]
+          created_at?: string
+          effective_from: string
+          effective_to?: string | null
+          fixed_amount?: number | null
+          id?: string
+          maximum_amount?: number | null
+          minimum_amount?: number | null
+          notes?: string | null
+          percentage_rate?: number | null
+          source?: string | null
+          tiers?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          calculation_type?: Database["public"]["Enums"]["cost_calculation_type"]
+          conditions?: string | null
+          cost_type?: Database["public"]["Enums"]["acquisition_cost_type"]
+          created_at?: string
+          effective_from?: string
+          effective_to?: string | null
+          fixed_amount?: number | null
+          id?: string
+          maximum_amount?: number | null
+          minimum_amount?: number | null
+          notes?: string | null
+          percentage_rate?: number | null
+          source?: string | null
+          tiers?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      capital_gains_tax_estimates: {
+        Row: {
+          calculated_at: string
+          calculated_cost_basis: number
+          calculation_details: Json
+          created_at: string
+          customer_id: string
+          disclaimer_acknowledged: boolean
+          estimated_gain: number
+          estimated_sale_price: number
+          estimated_tax: number
+          id: string
+          property_id: string
+          rule_version: string
+          sale_request_id: string | null
+        }
+        Insert: {
+          calculated_at?: string
+          calculated_cost_basis: number
+          calculation_details?: Json
+          created_at?: string
+          customer_id: string
+          disclaimer_acknowledged?: boolean
+          estimated_gain: number
+          estimated_sale_price: number
+          estimated_tax: number
+          id?: string
+          property_id: string
+          rule_version: string
+          sale_request_id?: string | null
+        }
+        Update: {
+          calculated_at?: string
+          calculated_cost_basis?: number
+          calculation_details?: Json
+          created_at?: string
+          customer_id?: string
+          disclaimer_acknowledged?: boolean
+          estimated_gain?: number
+          estimated_sale_price?: number
+          estimated_tax?: number
+          id?: string
+          property_id?: string
+          rule_version?: string
+          sale_request_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "capital_gains_tax_estimates_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "capital_gains_tax_estimates_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "capital_gains_tax_estimates_sale_request_id_fkey"
+            columns: ["sale_request_id"]
+            isOneToOne: false
+            referencedRelation: "property_sale_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      capital_gains_tax_rules: {
+        Row: {
+          active: boolean
+          calculation_notes: string | null
+          created_at: string
+          effective_from: string
+          effective_to: string | null
+          id: string
+          parameters: Json
+          rule_version: string
+          source: string | null
+          tax_rate: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          calculation_notes?: string | null
+          created_at?: string
+          effective_from: string
+          effective_to?: string | null
+          id?: string
+          parameters?: Json
+          rule_version: string
+          source?: string | null
+          tax_rate: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          calculation_notes?: string | null
+          created_at?: string
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          parameters?: Json
+          rule_version?: string
+          source?: string | null
+          tax_rate?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       customer_bank_accounts: {
         Row: {
           account_holder_identifier: string | null
@@ -230,6 +399,197 @@ export type Database = {
           id?: string
           phone_1?: string
           phone_2?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      investment_inquiries: {
+        Row: {
+          created_at: string
+          customer_id: string
+          id: string
+          investment_offer_id: string
+          notes: string | null
+          status: Database["public"]["Enums"]["inquiry_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          id?: string
+          investment_offer_id: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["inquiry_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          id?: string
+          investment_offer_id?: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["inquiry_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investment_inquiries_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investment_inquiries_investment_offer_id_fkey"
+            columns: ["investment_offer_id"]
+            isOneToOne: false
+            referencedRelation: "investment_offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investment_offer_documents: {
+        Row: {
+          created_at: string
+          description: string | null
+          document_type: Database["public"]["Enums"]["offer_document_type"]
+          file_size: number
+          id: string
+          investment_offer_id: string
+          mime_type: string
+          original_filename: string
+          sort_order: number
+          storage_path: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          document_type?: Database["public"]["Enums"]["offer_document_type"]
+          file_size: number
+          id?: string
+          investment_offer_id: string
+          mime_type: string
+          original_filename: string
+          sort_order?: number
+          storage_path: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          document_type?: Database["public"]["Enums"]["offer_document_type"]
+          file_size?: number
+          id?: string
+          investment_offer_id?: string
+          mime_type?: string
+          original_filename?: string
+          sort_order?: number
+          storage_path?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investment_offer_documents_investment_offer_id_fkey"
+            columns: ["investment_offer_id"]
+            isOneToOne: false
+            referencedRelation: "investment_offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investment_offers: {
+        Row: {
+          address_or_project_name: string
+          city: string
+          construction_status: Database["public"]["Enums"]["property_condition"]
+          created_at: string
+          economic_analysis: string | null
+          estimated_annual_expenses: number | null
+          expected_annual_income: number | null
+          expected_delivery_date: string | null
+          expected_gross_yield: number | null
+          expected_monthly_rent: number | null
+          expected_net_yield: number | null
+          featured: boolean
+          financing_available: boolean
+          id: string
+          location: string | null
+          minimum_equity_required: number | null
+          override_brokerage_fee_amount: number | null
+          override_lawyer_fee_amount: number | null
+          override_purchase_tax_amount: number | null
+          property_price: number
+          property_purpose: Database["public"]["Enums"]["purchase_purpose"]
+          property_size: number | null
+          property_type: Database["public"]["Enums"]["property_type"]
+          published_at: string | null
+          rooms: number | null
+          short_description: string | null
+          status: Database["public"]["Enums"]["offer_status"]
+          updated_at: string
+        }
+        Insert: {
+          address_or_project_name: string
+          city: string
+          construction_status?: Database["public"]["Enums"]["property_condition"]
+          created_at?: string
+          economic_analysis?: string | null
+          estimated_annual_expenses?: number | null
+          expected_annual_income?: number | null
+          expected_delivery_date?: string | null
+          expected_gross_yield?: number | null
+          expected_monthly_rent?: number | null
+          expected_net_yield?: number | null
+          featured?: boolean
+          financing_available?: boolean
+          id?: string
+          location?: string | null
+          minimum_equity_required?: number | null
+          override_brokerage_fee_amount?: number | null
+          override_lawyer_fee_amount?: number | null
+          override_purchase_tax_amount?: number | null
+          property_price: number
+          property_purpose?: Database["public"]["Enums"]["purchase_purpose"]
+          property_size?: number | null
+          property_type: Database["public"]["Enums"]["property_type"]
+          published_at?: string | null
+          rooms?: number | null
+          short_description?: string | null
+          status?: Database["public"]["Enums"]["offer_status"]
+          updated_at?: string
+        }
+        Update: {
+          address_or_project_name?: string
+          city?: string
+          construction_status?: Database["public"]["Enums"]["property_condition"]
+          created_at?: string
+          economic_analysis?: string | null
+          estimated_annual_expenses?: number | null
+          expected_annual_income?: number | null
+          expected_delivery_date?: string | null
+          expected_gross_yield?: number | null
+          expected_monthly_rent?: number | null
+          expected_net_yield?: number | null
+          featured?: boolean
+          financing_available?: boolean
+          id?: string
+          location?: string | null
+          minimum_equity_required?: number | null
+          override_brokerage_fee_amount?: number | null
+          override_lawyer_fee_amount?: number | null
+          override_purchase_tax_amount?: number | null
+          property_price?: number
+          property_purpose?: Database["public"]["Enums"]["purchase_purpose"]
+          property_size?: number | null
+          property_type?: Database["public"]["Enums"]["property_type"]
+          published_at?: string | null
+          rooms?: number | null
+          short_description?: string | null
+          status?: Database["public"]["Enums"]["offer_status"]
           updated_at?: string
         }
         Relationships: []
@@ -518,6 +878,172 @@ export type Database = {
           },
         ]
       }
+      property_sale_requests: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          customer_id: string
+          desired_sale_date: string | null
+          id: string
+          minimum_acceptable_price: number | null
+          notes: string | null
+          payment_terms: string | null
+          property_id: string
+          requested_sale_price: number
+          status: Database["public"]["Enums"]["sale_request_status"]
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          customer_id: string
+          desired_sale_date?: string | null
+          id?: string
+          minimum_acceptable_price?: number | null
+          notes?: string | null
+          payment_terms?: string | null
+          property_id: string
+          requested_sale_price: number
+          status?: Database["public"]["Enums"]["sale_request_status"]
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          customer_id?: string
+          desired_sale_date?: string | null
+          id?: string
+          minimum_acceptable_price?: number | null
+          notes?: string | null
+          payment_terms?: string | null
+          property_id?: string
+          requested_sale_price?: number
+          status?: Database["public"]["Enums"]["sale_request_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_sale_requests_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_sale_requests_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_tax_basis: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          other_recognized_costs: number | null
+          property_id: string
+          purchase_brokerage_fee: number | null
+          purchase_legal_fee: number | null
+          purchase_tax_paid: number | null
+          recognized_improvement_costs: number | null
+          sale_brokerage_fee: number | null
+          sale_legal_fee: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          other_recognized_costs?: number | null
+          property_id: string
+          purchase_brokerage_fee?: number | null
+          purchase_legal_fee?: number | null
+          purchase_tax_paid?: number | null
+          recognized_improvement_costs?: number | null
+          sale_brokerage_fee?: number | null
+          sale_legal_fee?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          other_recognized_costs?: number | null
+          property_id?: string
+          purchase_brokerage_fee?: number | null
+          purchase_legal_fee?: number | null
+          purchase_tax_paid?: number | null
+          recognized_improvement_costs?: number | null
+          sale_brokerage_fee?: number | null
+          sale_legal_fee?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_tax_basis_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: true
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_transactions: {
+        Row: {
+          amount: number
+          category: Database["public"]["Enums"]["transaction_category"]
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          notes: string | null
+          property_id: string
+          source: string | null
+          transaction_date: string
+          transaction_type: Database["public"]["Enums"]["transaction_type"]
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          category?: Database["public"]["Enums"]["transaction_category"]
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          notes?: string | null
+          property_id: string
+          source?: string | null
+          transaction_date: string
+          transaction_type: Database["public"]["Enums"]["transaction_type"]
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: Database["public"]["Enums"]["transaction_category"]
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          notes?: string | null
+          property_id?: string
+          source?: string | null
+          transaction_date?: string
+          transaction_type?: Database["public"]["Enums"]["transaction_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_transactions_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -587,8 +1113,61 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      estimate_capital_gains_tax: {
+        Args: {
+          p_estimated_sale_price: number
+          p_property_id: string
+          p_sale_request_id?: string
+        }
+        Returns: {
+          calculated_at: string
+          calculated_cost_basis: number
+          calculation_details: Json
+          created_at: string
+          customer_id: string
+          disclaimer_acknowledged: boolean
+          estimated_gain: number
+          estimated_sale_price: number
+          estimated_tax: number
+          id: string
+          property_id: string
+          rule_version: string
+          sale_request_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "capital_gains_tax_estimates"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      get_my_sale_requests: {
+        Args: never
+        Returns: {
+          admin_notes: string | null
+          created_at: string
+          customer_id: string
+          desired_sale_date: string | null
+          id: string
+          minimum_acceptable_price: number | null
+          notes: string | null
+          payment_terms: string | null
+          property_id: string
+          requested_sale_price: number
+          status: Database["public"]["Enums"]["sale_request_status"]
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "property_sale_requests"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
     }
     Enums: {
+      acquisition_cost_type: "purchase_tax" | "lawyer_fee" | "brokerage_fee"
+      cost_calculation_type: "percentage" | "fixed" | "tiered" | "custom"
       customer_status: "lead" | "active" | "inactive"
       document_type:
         | "customer_passport"
@@ -597,6 +1176,22 @@ export type Database = {
         | "bank_document"
         | "other"
       financing_requirement: "yes" | "no" | "not_sure"
+      inquiry_status:
+        | "new"
+        | "contacted"
+        | "in_discussion"
+        | "closed_won"
+        | "closed_lost"
+      offer_document_type:
+        | "image"
+        | "floor_plan"
+        | "brochure"
+        | "permit"
+        | "planning_approval"
+        | "zoning"
+        | "specification"
+        | "other"
+      offer_status: "draft" | "active" | "reserved" | "sold" | "archived"
       property_condition:
         | "new_from_developer"
         | "under_construction"
@@ -624,6 +1219,27 @@ export type Database = {
         | "within_1_year"
         | "more_than_1_year"
         | "exploring"
+      sale_request_status:
+        | "submitted"
+        | "under_review"
+        | "approved_for_marketing"
+        | "marketing"
+        | "offer_received"
+        | "sold"
+        | "cancelled"
+      transaction_category:
+        | "rent"
+        | "maintenance"
+        | "repair"
+        | "municipal_tax"
+        | "insurance"
+        | "management_fee"
+        | "utilities"
+        | "legal"
+        | "brokerage"
+        | "financing"
+        | "other"
+      transaction_type: "income" | "expense"
       user_role: "admin" | "client"
     }
     CompositeTypes: {
@@ -752,6 +1368,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      acquisition_cost_type: ["purchase_tax", "lawyer_fee", "brokerage_fee"],
+      cost_calculation_type: ["percentage", "fixed", "tiered", "custom"],
       customer_status: ["lead", "active", "inactive"],
       document_type: [
         "customer_passport",
@@ -761,6 +1379,24 @@ export const Constants = {
         "other",
       ],
       financing_requirement: ["yes", "no", "not_sure"],
+      inquiry_status: [
+        "new",
+        "contacted",
+        "in_discussion",
+        "closed_won",
+        "closed_lost",
+      ],
+      offer_document_type: [
+        "image",
+        "floor_plan",
+        "brochure",
+        "permit",
+        "planning_approval",
+        "zoning",
+        "specification",
+        "other",
+      ],
+      offer_status: ["draft", "active", "reserved", "sold", "archived"],
       property_condition: [
         "new_from_developer",
         "under_construction",
@@ -792,6 +1428,29 @@ export const Constants = {
         "more_than_1_year",
         "exploring",
       ],
+      sale_request_status: [
+        "submitted",
+        "under_review",
+        "approved_for_marketing",
+        "marketing",
+        "offer_received",
+        "sold",
+        "cancelled",
+      ],
+      transaction_category: [
+        "rent",
+        "maintenance",
+        "repair",
+        "municipal_tax",
+        "insurance",
+        "management_fee",
+        "utilities",
+        "legal",
+        "brokerage",
+        "financing",
+        "other",
+      ],
+      transaction_type: ["income", "expense"],
       user_role: ["admin", "client"],
     },
   },

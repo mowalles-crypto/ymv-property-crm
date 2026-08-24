@@ -11,14 +11,19 @@ const adminLinks = [
   { href: "/admin/clients", label: t.nav.clients },
   { href: "/admin/properties", label: t.nav.properties },
   { href: "/admin/accounting", label: t.nav.accounting },
+  { href: "/admin/offers", label: t.nav.investmentOffers },
+  { href: "/admin/sale-requests", label: t.nav.saleRequests },
   { href: "/admin/requirements", label: t.nav.requirements },
   { href: "/admin/users", label: t.nav.users },
 ];
 
 const clientLinks = [
-  { href: "/client/dashboard", label: t.nav.dashboard },
-  { href: "/client/properties", label: t.nav.myProperties },
-  { href: "/client/profile", label: t.nav.myProfile },
+  { href: "/client/home", label: t.nav.home },
+  { href: "/client/properties", label: t.nav.myInvestments },
+  { href: "/client/find-investment", label: t.nav.findInvestment },
+  { href: "/client/sell", label: t.nav.sellProperty },
+  { href: "/client/reports", label: t.nav.reports },
+  { href: "/client/profile", label: t.nav.documentsAndProfile },
 ];
 
 export function Sidebar({ role }: { role: UserRole }) {

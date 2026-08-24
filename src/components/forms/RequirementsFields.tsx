@@ -7,14 +7,16 @@ const propertyTypeKeys = Object.keys(
   t.requirements.propertyTypeOptions
 ) as PropertyType[];
 
-// Onboarding-only (register wizard + the post-confirmation fallback page),
-// so this is unconditionally dark — there is no light-theme caller.
 export function RequirementsFields({
   value,
   onChange,
+  variant = "dark",
 }: {
   value: RequirementsFormState;
   onChange: (next: RequirementsFormState) => void;
+  /** "dark" for the onboarding/auth portal (default); "light" when reused
+   * inside the authenticated CRM, e.g. the Find Investment questionnaire. */
+  variant?: "dark" | "light";
 }) {
   function set<K extends keyof RequirementsFormState>(
     key: K,
@@ -35,7 +37,7 @@ export function RequirementsFields({
       <Select
         id="purchase_purpose"
         label={t.requirements.purchasePurpose}
-        variant="dark"
+        variant={variant}
         required
         value={value.purchase_purpose}
         onChange={(e) =>
@@ -53,7 +55,7 @@ export function RequirementsFields({
       </Select>
 
       <div>
-        <div className="mb-1 text-sm font-medium text-ivory/90">
+        <div className={`mb-1 text-sm font-medium ${variant === "dark" ? "text-ivory/90" : "text-slate-700"}`}>
           {t.requirements.propertyTypes}
         </div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -61,7 +63,7 @@ export function RequirementsFields({
             <Checkbox
               key={key}
               id={`type-${key}`}
-              variant="dark"
+              variant={variant}
               label={t.requirements.propertyTypeOptions[key]}
               checked={value.property_types.includes(key)}
               onChange={() => toggleType(key)}
@@ -73,7 +75,7 @@ export function RequirementsFields({
       <Input
         id="preferred_locations"
         label={t.requirements.preferredLocations}
-        variant="dark"
+        variant={variant}
         placeholder="e.g. Tel Aviv, Herzliya, Ra'anana"
         value={value.preferred_locations}
         onChange={(e) => set("preferred_locations", e.target.value)}
@@ -84,7 +86,7 @@ export function RequirementsFields({
           id="budget_min"
           type="number"
           label={t.requirements.budgetMin}
-          variant="dark"
+          variant={variant}
           value={value.budget_min}
           onChange={(e) => set("budget_min", e.target.value)}
         />
@@ -92,7 +94,7 @@ export function RequirementsFields({
           id="budget_max"
           type="number"
           label={t.requirements.budgetMax}
-          variant="dark"
+          variant={variant}
           value={value.budget_max}
           onChange={(e) => set("budget_max", e.target.value)}
         />
@@ -102,7 +104,7 @@ export function RequirementsFields({
         id="available_equity"
         type="number"
         label={t.requirements.availableEquity}
-        variant="dark"
+        variant={variant}
         value={value.available_equity}
         onChange={(e) => set("available_equity", e.target.value)}
       />
@@ -110,7 +112,7 @@ export function RequirementsFields({
       <Select
         id="financing_required"
         label={t.requirements.financingRequired}
-        variant="dark"
+        variant={variant}
         value={value.financing_required}
         onChange={(e) =>
           set("financing_required", e.target.value as RequirementsFormState["financing_required"])
@@ -129,7 +131,7 @@ export function RequirementsFields({
             id="financing_amount"
             type="number"
             label={t.requirements.financingAmount}
-            variant="dark"
+            variant={variant}
             optional
             value={value.financing_amount}
             onChange={(e) => set("financing_amount", e.target.value)}
@@ -138,7 +140,7 @@ export function RequirementsFields({
             id="financing_percentage"
             type="number"
             label={t.requirements.financingPercentage}
-            variant="dark"
+            variant={variant}
             optional
             value={value.financing_percentage}
             onChange={(e) => set("financing_percentage", e.target.value)}
@@ -152,7 +154,7 @@ export function RequirementsFields({
           type="number"
           step="0.5"
           label={t.requirements.roomsMin}
-          variant="dark"
+          variant={variant}
           value={value.rooms_min}
           onChange={(e) => set("rooms_min", e.target.value)}
         />
@@ -161,7 +163,7 @@ export function RequirementsFields({
           type="number"
           step="0.5"
           label={t.requirements.roomsMax}
-          variant="dark"
+          variant={variant}
           value={value.rooms_max}
           onChange={(e) => set("rooms_max", e.target.value)}
         />
@@ -172,7 +174,7 @@ export function RequirementsFields({
           id="size_min"
           type="number"
           label={t.requirements.sizeMin}
-          variant="dark"
+          variant={variant}
           value={value.size_min}
           onChange={(e) => set("size_min", e.target.value)}
         />
@@ -180,7 +182,7 @@ export function RequirementsFields({
           id="size_max"
           type="number"
           label={t.requirements.sizeMax}
-          variant="dark"
+          variant={variant}
           value={value.size_max}
           onChange={(e) => set("size_max", e.target.value)}
         />
@@ -189,7 +191,7 @@ export function RequirementsFields({
       <Select
         id="property_condition"
         label={t.requirements.propertyCondition}
-        variant="dark"
+        variant={variant}
         value={value.property_condition}
         onChange={(e) =>
           set("property_condition", e.target.value as RequirementsFormState["property_condition"])
@@ -205,7 +207,7 @@ export function RequirementsFields({
       <Select
         id="purchase_timeline"
         label={t.requirements.purchaseTimeline}
-        variant="dark"
+        variant={variant}
         required
         value={value.purchase_timeline}
         onChange={(e) =>
@@ -228,7 +230,7 @@ export function RequirementsFields({
           type="number"
           step="0.1"
           label={t.requirements.desiredYield}
-          variant="dark"
+          variant={variant}
           optional
           value={value.desired_yield}
           onChange={(e) => set("desired_yield", e.target.value)}
@@ -236,48 +238,48 @@ export function RequirementsFields({
       )}
 
       <div>
-        <div className="mb-1 text-sm font-medium text-ivory/90">
+        <div className={`mb-1 text-sm font-medium ${variant === "dark" ? "text-ivory/90" : "text-slate-700"}`}>
           {t.requirements.additionalPreferences}
         </div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           <Checkbox
             id="wants_balcony"
-            variant="dark"
+            variant={variant}
             label={t.requirements.wantsBalcony}
             checked={value.wants_balcony}
             onChange={(e) => set("wants_balcony", e.target.checked)}
           />
           <Checkbox
             id="wants_parking"
-            variant="dark"
+            variant={variant}
             label={t.requirements.wantsParking}
             checked={value.wants_parking}
             onChange={(e) => set("wants_parking", e.target.checked)}
           />
           <Checkbox
             id="wants_storage"
-            variant="dark"
+            variant={variant}
             label={t.requirements.wantsStorage}
             checked={value.wants_storage}
             onChange={(e) => set("wants_storage", e.target.checked)}
           />
           <Checkbox
             id="wants_elevator"
-            variant="dark"
+            variant={variant}
             label={t.requirements.wantsElevator}
             checked={value.wants_elevator}
             onChange={(e) => set("wants_elevator", e.target.checked)}
           />
           <Checkbox
             id="wants_accessibility"
-            variant="dark"
+            variant={variant}
             label={t.requirements.wantsAccessibility}
             checked={value.wants_accessibility}
             onChange={(e) => set("wants_accessibility", e.target.checked)}
           />
           <Checkbox
             id="wants_public_transport_proximity"
-            variant="dark"
+            variant={variant}
             label={t.requirements.wantsPublicTransport}
             checked={value.wants_public_transport_proximity}
             onChange={(e) => set("wants_public_transport_proximity", e.target.checked)}
@@ -288,7 +290,7 @@ export function RequirementsFields({
       <Input
         id="preferred_floor"
         label={t.requirements.preferredFloor}
-        variant="dark"
+        variant={variant}
         optional
         value={value.preferred_floor}
         onChange={(e) => set("preferred_floor", e.target.value)}
@@ -297,7 +299,7 @@ export function RequirementsFields({
       <Textarea
         id="other_preferences"
         label={t.requirements.otherPreferences}
-        variant="dark"
+        variant={variant}
         optional
         rows={2}
         value={value.other_preferences}
@@ -307,7 +309,7 @@ export function RequirementsFields({
       <Textarea
         id="additional_requirements"
         label={t.requirements.additionalRequirements}
-        variant="dark"
+        variant={variant}
         optional
         rows={3}
         value={value.additional_requirements}

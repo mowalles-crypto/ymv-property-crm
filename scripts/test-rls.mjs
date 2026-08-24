@@ -398,6 +398,219 @@ async function main() {
   }
 
   // =====================================================================
+  // Task-driven investment platform (property_transactions, investment
+  // offers, sale requests, tax basis/estimates). Requires
+  // scripts/seed-investment-platform.mjs to have run.
+  // =====================================================================
+  const { data: cohenPropsAsAdmin } = await admin
+    .from("properties")
+    .select("id")
+    .eq("customer_id", customerA.id)
+    .eq("property_address", "12 Rothschild Blvd, Tel Aviv");
+  const cohenRentedId = cohenPropsAsAdmin?.[0]?.id;
+  const { data: activeOffersAsAdmin } = await admin
+    .from("investment_offers")
+    .select("id")
+    .eq("status", "active")
+    .limit(1);
+  const { data: draftOffersAsAdmin } = await admin
+    .from("investment_offers")
+    .select("id")
+    .eq("status", "draft")
+    .limit(1);
+  const activeOfferId = activeOffersAsAdmin?.[0]?.id;
+  const draftOfferId = draftOffersAsAdmin?.[0]?.id;
+
+  if (cohenRentedId && activeOfferId) {
+    {
+      const { data, error } = await clientA
+        .from("property_transactions")
+        .select("id, property_id")
+        .eq("property_id", cohenRentedId);
+      record(
+        "Client A can read transactions for their own property",
+        !error && data.length > 0,
+        error?.message ?? `got ${data?.length} rows`
+      );
+    }
+    {
+      const { data, error } = await clientB
+        .from("property_transactions")
+        .select("id")
+        .eq("property_id", cohenRentedId);
+      record(
+        "Client B cannot read Client A's property transactions",
+        !error && data.length === 0,
+        error?.message ?? `got ${data?.length} rows`
+      );
+    }
+    {
+      await clientA.from("property_transactions").insert({
+        property_id: cohenRentedId,
+        transaction_date: "2026-01-01",
+        transaction_type: "income",
+        amount: 999999,
+      });
+      const { count } = await admin
+        .from("property_transactions")
+        .select("id", { count: "exact", head: true })
+        .eq("property_id", cohenRentedId)
+        .eq("amount", 999999);
+      record(
+        "Client A CANNOT insert a property transaction (admin-managed only)",
+        !count,
+        `matching rows: ${count}`
+      );
+    }
+    {
+      const { data, error } = await clientA.from("investment_offers").select("status");
+      const ok = !error && data.every((o) => o.status === "active");
+      record("Client A sees only active investment offers", ok, ok ? undefined : (error?.message ?? "a non-active offer leaked"));
+    }
+    if (draftOfferId) {
+      const { data, error } = await clientA.from("investment_offers").select("id").eq("id", draftOfferId);
+      record(
+        "Client A cannot read a draft investment offer by id",
+        !error && data.length === 0,
+        error?.message ?? `got ${data?.length} rows`
+      );
+    }
+    {
+      const { error } = await clientA.from("investment_inquiries").insert({
+        customer_id: customerA.id,
+        investment_offer_id: activeOfferId,
+      });
+      // May already exist from seed data (unique constraint) — either
+      // outcome (success or a unique-violation error) proves the insert
+      // was evaluated under Client A's own identity, not silently dropped.
+      record(
+        "Client A can express interest in an active offer (insert succeeds or is a duplicate)",
+        !error || error.code === "23505",
+        error && error.code !== "23505" ? error.message : undefined
+      );
+    }
+    {
+      const { error } = await clientA.from("investment_inquiries").insert({
+        customer_id: customerB.id,
+        investment_offer_id: activeOfferId,
+      });
+      record(
+        "Client A CANNOT create an inquiry impersonating Client B",
+        !!error,
+        error ? undefined : "insert succeeded with a foreign customer_id"
+      );
+    }
+    {
+      // property_sale_requests: admin_notes must never reach a client, even
+      // via the RPC path they're actually meant to use.
+      const { data, error } = await clientA.rpc("get_my_sale_requests");
+      const leaked = (data ?? []).some((r) => r.admin_notes != null);
+      const ok = !error && !leaked;
+      record("get_my_sale_requests() never returns admin_notes to a client", ok, ok ? undefined : (error?.message ?? "admin_notes leaked to client"));
+    }
+    {
+      // ...and the base table itself is admin-only for SELECT, so a client
+      // querying it directly (bypassing the RPC) gets nothing at all.
+      const { data, error } = await clientA.from("property_sale_requests").select("id").limit(1);
+      record(
+        "Client A cannot read property_sale_requests directly (RPC-only access)",
+        !error && data.length === 0,
+        error?.message ?? `got ${data?.length} rows`
+      );
+    }
+    {
+      const { data: adminView } = await admin.from("property_sale_requests").select("id, admin_notes").not("admin_notes", "is", null).limit(1);
+      const ok = !!adminView && adminView.length > 0 && adminView[0].admin_notes != null;
+      record("Admin CAN read admin_notes directly on property_sale_requests", ok, ok ? undefined : "no seeded sale request with admin_notes found");
+    }
+    {
+      // The client INSERT path itself: no .select() chained, since RETURNING
+      // is subject to RLS SELECT policies too and this table intentionally
+      // has none for clients (admin_notes confidentiality) — the app reads
+      // the new row back via get_my_sale_requests() instead.
+      const { error: insertErr } = await clientA.from("property_sale_requests").insert({
+        customer_id: customerA.id,
+        property_id: cohenRentedId,
+        requested_sale_price: 3100000,
+      });
+      const { data: afterInsert, error: rpcErr } = await clientA.rpc("get_my_sale_requests");
+      const created = afterInsert?.find(
+        (r) => r.property_id === cohenRentedId && Number(r.requested_sale_price) === 3100000
+      );
+      const ok = !insertErr && !rpcErr && !!created;
+      record(
+        "Client A can create a sale request for their own property",
+        ok,
+        ok ? undefined : (insertErr?.message ?? rpcErr?.message ?? "row not found via get_my_sale_requests() after insert")
+      );
+      if (created) {
+        await admin.from("property_sale_requests").delete().eq("id", created.id);
+      }
+    }
+    {
+      const { error } = await clientA.from("property_sale_requests").insert({
+        customer_id: customerA.id,
+        property_id: propsB?.[0]?.id ?? "00000000-0000-0000-0000-000000000000",
+        requested_sale_price: 3100000,
+      });
+      record(
+        "Client A CANNOT create a sale request for Client B's property",
+        !!error,
+        error ? undefined : "insert succeeded for a property Client A doesn't own"
+      );
+    }
+    {
+      const { error } = await clientA.from("property_sale_requests").insert({
+        customer_id: customerB.id,
+        property_id: cohenRentedId,
+        requested_sale_price: 3100000,
+      });
+      record(
+        "Client A CANNOT create a sale request impersonating Client B",
+        !!error,
+        error ? undefined : "insert succeeded with a foreign customer_id"
+      );
+    }
+    {
+      const { error } = await clientA.from("property_sale_requests").insert({
+        customer_id: customerA.id,
+        property_id: cohenRentedId,
+        requested_sale_price: 3100000,
+        admin_notes: "client trying to set this",
+      });
+      record(
+        "Client A CANNOT set admin_notes on their own sale request insert",
+        !!error,
+        error ? undefined : "insert succeeded with a client-supplied admin_notes"
+      );
+    }
+    {
+      const { data, error } = await clientA.rpc("estimate_capital_gains_tax", {
+        p_property_id: cohenRentedId,
+        p_estimated_sale_price: 3000000,
+      });
+      record(
+        "Client A can generate a capital gains tax estimate for their own property",
+        !error && !!data && data.rule_version,
+        error?.message
+      );
+    }
+    if (propsB?.[0]?.id) {
+      const { error } = await clientA.rpc("estimate_capital_gains_tax", {
+        p_property_id: propsB[0].id,
+        p_estimated_sale_price: 3000000,
+      });
+      record(
+        "Client A CANNOT generate a tax estimate for Client B's property",
+        !!error,
+        error ? undefined : "estimate succeeded for a property Client A doesn't own"
+      );
+    }
+  } else {
+    console.log("SKIP  investment-platform tests — run scripts/seed-investment-platform.mjs first");
+  }
+
+  // =====================================================================
   // Anonymous / unauthenticated
   // =====================================================================
   {

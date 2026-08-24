@@ -120,7 +120,7 @@ export function RegisterWizard() {
       return;
     }
 
-    router.push("/client/dashboard");
+    router.push("/client/home");
     router.refresh();
   }
 

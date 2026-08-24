@@ -9,7 +9,7 @@ export default async function CompleteRequirementsPage() {
 
   // Already linked to a customer — nothing left to complete here.
   if (profile.customer_id) {
-    redirect(profile.role === "admin" ? "/admin/dashboard" : "/client/dashboard");
+    redirect(profile.role === "admin" ? "/admin/dashboard" : "/client/home");
   }
 
   return (
