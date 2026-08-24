@@ -1,10 +1,11 @@
-# YMV Property CRM
+# BIZRAEL Property Management
 
-A CRM for a property management company: clients, properties, per-property monthly accounting, a client self-registration flow with a property requirements questionnaire, and role-based admin/client portals — built on Next.js and Supabase.
+A CRM for BIZRAEL, a property management company: clients, properties, per-property monthly accounting, a client self-registration flow with a property requirements questionnaire, and role-based admin/client portals — built on Next.js and Supabase. (Repo/package name `ymv-crm` predates the BIZRAEL brand and was kept to avoid an unrelated rename churn.)
 
 ## Features
 
-- **Auth**: email/password login, self-registration, email confirmation, forgot/reset password, protected routes, role-aware redirects.
+- **Branded entry portal**: a premium, dark charcoal + champagne-gold login/register/password-recovery experience built around the real BIZRAEL logo (`public/brand/bizrael-logo.png`) — see **Branding** below.
+- **Auth**: email/password login, self-registration, email confirmation, forgot/reset password, protected routes, role-aware redirects, session-expired detection.
 - **Roles**: `admin` (full CRUD on all business data) and `client` (read-only access to their own data only), enforced by Postgres Row Level Security — not just hidden UI.
 - **Clients**: list with search/filter, create/edit/delete, detail page with contact info, requirements, and owned properties.
 - **Properties**: list with search/filter by client and status, create/edit/delete, detail page with financing/rental/sale sections shown conditionally by status.
@@ -131,6 +132,19 @@ node scripts/test-rls.mjs
 
 Signs in as the seeded admin, two different clients, and an anonymous session, then runs 30 assertions straight against the Data API and Storage API (no service role, no frontend) covering the checklist from the spec: admin full CRUD on every table; a client reading only their own customer/properties/accounting/requirements/spouse/bank-account/documents; a client blocked from writing business data (verified by confirming the row is unchanged, since an RLS-blocked UPDATE/DELETE affects 0 rows rather than throwing); two clients each unable to see the other's data or bank/spouse records; and — at the Storage level, not just the metadata table — a client unable to get a signed URL for another client's passport file even knowing its exact path, and an anonymous caller unable to get one for anybody's. **Last run: 30/30 passed.** (Requires `scripts/seed-profile-expansion.mjs` to have run for the document/spouse/bank assertions; they're skipped otherwise.)
 
+## Branding
+
+The BIZRAEL logo (`public/brand/bizrael-logo.png`) is the real supplied asset — never recreated, redrawn, or recolored — used at its native aspect ratio in the sidebar (authenticated app) and full-size on the entry portal.
+
+Two visually distinct surfaces share one component library:
+
+- **Entry portal** (`(auth)` route group, plus `/register/complete-requirements`): full-screen dark charcoal (`bg-charcoal`), champagne-gold accents (`text-gold`, the `gold`/`gold-outline` Button variants), a subtle gold architectural line-and-circle SVG background, and Playfair Display for headings (`var(--font-display)`) against Geist Sans for UI text.
+- **Authenticated CRM** (admin/client dashboards, forms, tables): stays light and dense for daily data-entry usability, with gold used only as an accent — the sidebar's active-nav indicator, a hairline gold divider under the top header, and a thin gold top border on dashboard `StatCard`s. No business action button was recolored gold; that color is reserved for the brand/entry surfaces per the design brief ("gold only as an accent... do not make every component gold").
+
+The color tokens (`--color-charcoal`, `--color-gold`, `--color-ivory`, `--color-warmgray`, etc.) are defined once in `src/app/globals.css` via Tailwind v4's `@theme`. The shared form primitives in `src/components/ui/Field.tsx` (`Input`/`Select`/`Textarea`/`Checkbox`) and `Button.tsx` take an additive `variant`/`"dark"` option — every existing light-themed call site across the CRM (`CustomerForm`, `PropertyForm`, `SpouseSection`, `BankAccountSection`, ...) is untouched and defaults to light; only the onboarding-only components (`RegisterWizard`, `RequirementsFields`, `CompleteRequirementsForm`, the login/forgot/reset pages) opt into `variant="dark"`.
+
+**Stitch MCP** was checked again before this work (same `Incompatible auth server: does not support dynamic client registration` failure as every prior check this project) and remains unavailable — this design was hand-built with Tailwind, not substituted with another AI design tool, consistent with the rest of the app.
+
 ## Internationalization
 
 All strings are centralized in `src/lib/i18n/en.ts` behind `src/lib/i18n/index.ts`'s `t` export. Components only ever do `import { t } from "@/lib/i18n"` — no hardcoded copy. Adding Hebrew or Spanish means writing `he.ts`/`es.ts` matching the same shape and switching `getLocale()`; `dir` is already a separate export so flipping to `rtl` for Hebrew doesn't touch component code.
@@ -152,3 +166,6 @@ npm run lint      # ESLint
 - **Only English is populated**; the i18n architecture is ready for `he`/`es` but those dictionaries don't exist yet.
 - **Passport numbers, bank details, etc. are not column-level-encrypted** in Postgres — security here relies on Supabase's encryption at rest, RLS (verified: nobody but the owning client or an admin can read the rows or the files), and the private Storage bucket. There is no application-layer encryption (e.g. `pgcrypto`) on top of that.
 - **Leaked password protection** is off by default on this Supabase project (flagged by `db advisors`, unrelated to the app's own schema) — worth enabling in the dashboard.
+- **Mobile viewport of the new entry portal was not visually verified** — the browser automation tool's window resize didn't change the rendered viewport in this environment, so mobile-width screenshots weren't possible. The layout (`(auth)/layout.tsx`) stacks correctly at the `lg:` breakpoint by ordinary Tailwind convention (the brand/login panels are plain block-stacked children until `lg:grid` kicks in), which is a standard, low-risk pattern, but it wasn't seen rendered at a phone width. Worth a manual check.
+- **No square favicon/app icon derived from the logo**: the supplied BIZRAEL asset is a wide wordmark (218×80), which reads poorly cropped down to 16–32px — the existing default Next.js favicon was left in place rather than shipping an unreadable one. The logo is used at readable sizes everywhere it actually needs to be (entry portal, sidebar).
+- **"Remember me" was intentionally not added** to the login form — the spec listed it as optional ("if implemented securely"), and doing it properly would mean giving the `@supabase/ssr` cookie-based session model a non-default, session-only cookie mode, which risks subtly breaking auth for a checkbox that was explicitly optional. A non-functional checkbox would have been worse than omitting it.

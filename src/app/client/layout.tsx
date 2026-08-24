@@ -12,7 +12,7 @@ export default async function ClientLayout({ children }: { children: ReactNode }
   const user = await getCurrentUser();
 
   return (
-    <AppShell role="client" userEmail={user?.email} title={t.app.name}>
+    <AppShell role="client" userEmail={user?.email} title={t.app.fullName}>
       {children}
     </AppShell>
   );

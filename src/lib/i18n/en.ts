@@ -5,7 +5,13 @@
  */
 const en = {
   app: {
-    name: "YMV Property CRM",
+    name: "BIZRAEL",
+    fullName: "BIZRAEL Property Management",
+    tagline: "Your Key to Success",
+    heroTitle: "Property Management. Investments. Control.",
+    heroSubtitle:
+      "A secure platform for managing your properties, investments and financial information in Israel.",
+    sessionExpired: "Your session has expired. Please sign in again to continue.",
   },
   nav: {
     dashboard: "Dashboard",
@@ -32,16 +38,25 @@ const en = {
     resetPassword: "Reset password",
     sendResetLink: "Send reset link",
     newPassword: "New password",
-    loginTitle: "Welcome back",
-    loginSubtitle: "Log in to manage your properties",
+    loginTitle: "Sign In",
+    loginSubtitle: "Access your private property and investment portal.",
     registerTitle: "Create your account",
     registerSubtitle: "Tell us about yourself and what you're looking for",
     haveAccount: "Already have an account?",
-    noAccount: "Don't have an account?",
+    noAccount: "Interested in investing with BIZRAEL?",
+    createAccountCta: "Create an account",
     checkYourEmail: "Check your email to confirm your account before logging in.",
     invalidCredentials: "Invalid email or password.",
     genericError: "Something went wrong. Please try again.",
     signOut: "Sign out",
+    showPassword: "Show password",
+    hidePassword: "Hide password",
+    rememberMe: "Remember me",
+    backToLogin: "Back to Sign In",
+    forgotPasswordSubtitle: "Enter your email and we'll send you a secure link to reset your password.",
+    resetPasswordSubtitle: "Choose a new password for your account.",
+    verifyEmailTitle: "Confirm your email",
+    verifyEmailSubtitle: "We've sent a confirmation link to your email address. Follow it to activate your account.",
   },
   registration: {
     stepAccount: "Account",

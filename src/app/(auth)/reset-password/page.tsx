@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Input } from "@/components/ui/Field";
+import { PasswordField } from "@/components/auth/PasswordField";
 import { Button } from "@/components/ui/Button";
 import { t } from "@/lib/i18n";
 
@@ -42,14 +42,14 @@ export default function ResetPasswordPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-slate-900">
+      <h1 style={{ fontFamily: "var(--font-display)" }} className="text-2xl font-medium text-ivory">
         {t.auth.resetPassword}
       </h1>
+      <p className="mt-1 text-sm text-warmgray">{t.auth.resetPasswordSubtitle}</p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-        <Input
+        <PasswordField
           id="password"
-          type="password"
           label={t.auth.newPassword}
           required
           minLength={8}
@@ -57,9 +57,8 @@ export default function ResetPasswordPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        <Input
+        <PasswordField
           id="confirmPassword"
-          type="password"
           label={t.auth.confirmPassword}
           required
           minLength={8}
@@ -68,9 +67,9 @@ export default function ResetPasswordPage() {
           onChange={(e) => setConfirmPassword(e.target.value)}
         />
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-red-400">{error}</p>}
 
-        <Button type="submit" disabled={loading} className="w-full">
+        <Button type="submit" variant="gold" disabled={loading} className="w-full">
           {loading ? t.common.loading : t.auth.resetPassword}
         </Button>
       </form>

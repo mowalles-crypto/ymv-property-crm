@@ -58,6 +58,7 @@ export function CompleteRequirementsForm() {
         <Input
           id="fullName"
           label={t.auth.fullName}
+          variant="dark"
           required
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
@@ -66,6 +67,7 @@ export function CompleteRequirementsForm() {
           id="phone1"
           type="tel"
           label={t.auth.phone1}
+          variant="dark"
           required
           value={phone1}
           onChange={(e) => setPhone1(e.target.value)}
@@ -74,6 +76,7 @@ export function CompleteRequirementsForm() {
           id="phone2"
           type="tel"
           label={t.auth.phone2}
+          variant="dark"
           optional
           value={phone2}
           onChange={(e) => setPhone2(e.target.value)}
@@ -82,9 +85,9 @@ export function CompleteRequirementsForm() {
 
       <RequirementsFields value={requirements} onChange={setRequirements} />
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-red-400">{error}</p>}
 
-      <Button type="button" onClick={handleSubmit} disabled={submitting} className="w-full">
+      <Button type="button" variant="gold" onClick={handleSubmit} disabled={submitting} className="w-full">
         {submitting ? t.registration.submitting : t.registration.submit}
       </Button>
     </div>

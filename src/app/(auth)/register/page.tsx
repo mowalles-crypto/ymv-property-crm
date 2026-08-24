@@ -4,10 +4,10 @@ import { t } from "@/lib/i18n";
 export default function RegisterPage() {
   return (
     <div>
-      <h1 className="text-xl font-semibold text-slate-900">
+      <h1 style={{ fontFamily: "var(--font-display)" }} className="text-2xl font-medium text-ivory">
         {t.auth.registerTitle}
       </h1>
-      <p className="mt-1 text-sm text-slate-500">{t.auth.registerSubtitle}</p>
+      <p className="mt-1 text-sm text-warmgray">{t.auth.registerSubtitle}</p>
       <div className="mt-6">
         <RegisterWizard />
       </div>

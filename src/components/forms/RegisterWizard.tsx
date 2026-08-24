@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/Field";
+import { PasswordField } from "@/components/auth/PasswordField";
 import { Button } from "@/components/ui/Button";
 import { RequirementsFields } from "@/components/forms/RequirementsFields";
 import { t } from "@/lib/i18n";
@@ -126,17 +127,15 @@ export function RegisterWizard() {
   if (awaitingConfirmation) {
     return (
       <div className="text-center">
-        <h1 className="text-xl font-semibold text-slate-900">
-          {t.registration.doneTitle}
+        <h1 style={{ fontFamily: "var(--font-display)" }} className="text-2xl font-medium text-ivory">
+          {t.auth.verifyEmailTitle}
         </h1>
-        <p className="mt-2 text-sm text-slate-500">
-          {t.auth.checkYourEmail}
-        </p>
+        <p className="mt-2 text-sm text-warmgray">{t.auth.verifyEmailSubtitle}</p>
         <Link
           href="/login"
-          className="mt-6 inline-block text-sm font-medium text-indigo-600 hover:text-indigo-500"
+          className="mt-6 inline-block text-sm font-medium text-gold hover:text-gold-light"
         >
-          {t.auth.login}
+          {t.auth.backToLogin}
         </Link>
       </div>
     );
@@ -144,20 +143,22 @@ export function RegisterWizard() {
 
   return (
     <div>
-      <ol className="mb-6 flex items-center justify-between text-xs font-medium text-slate-400">
+      <ol className="mb-6 flex items-center justify-between text-xs font-medium text-warmgray">
         {steps.map((s, i) => (
           <li key={s.step} className="flex flex-1 items-center">
             <div
               className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-                step >= s.step ? "bg-indigo-600 text-white" : "bg-slate-200 text-slate-500"
+                step >= s.step
+                  ? "bg-gradient-to-br from-gold-light to-gold-dark text-charcoal"
+                  : "bg-white/10 text-warmgray"
               }`}
             >
               {s.step}
             </div>
-            <span className={`ml-2 hidden sm:inline ${step === s.step ? "text-slate-900" : ""}`}>
+            <span className={`ml-2 hidden sm:inline ${step === s.step ? "text-ivory" : ""}`}>
               {s.label}
             </span>
-            {i < steps.length - 1 && <div className="mx-2 h-px flex-1 bg-slate-200" />}
+            {i < steps.length - 1 && <div className="mx-2 h-px flex-1 bg-white/10" />}
           </li>
         ))}
       </ol>
@@ -167,6 +168,7 @@ export function RegisterWizard() {
           <Input
             id="fullName"
             label={t.auth.fullName}
+            variant="dark"
             required
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
@@ -175,14 +177,14 @@ export function RegisterWizard() {
             id="email"
             type="email"
             label={t.auth.email}
+            variant="dark"
             required
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <Input
+          <PasswordField
             id="password"
-            type="password"
             label={t.auth.password}
             required
             minLength={8}
@@ -190,9 +192,8 @@ export function RegisterWizard() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          <Input
+          <PasswordField
             id="confirmPassword"
-            type="password"
             label={t.auth.confirmPassword}
             required
             minLength={8}
@@ -209,6 +210,7 @@ export function RegisterWizard() {
             id="phone1"
             type="tel"
             label={t.auth.phone1}
+            variant="dark"
             required
             value={phone1}
             onChange={(e) => setPhone1(e.target.value)}
@@ -217,6 +219,7 @@ export function RegisterWizard() {
             id="phone2"
             type="tel"
             label={t.auth.phone2}
+            variant="dark"
             optional
             value={phone2}
             onChange={(e) => setPhone2(e.target.value)}
@@ -230,13 +233,13 @@ export function RegisterWizard() {
 
       {step === 4 && (
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">
+          <h2 style={{ fontFamily: "var(--font-display)" }} className="text-lg font-medium text-ivory">
             {t.registration.confirmationTitle}
           </h2>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-warmgray">
             {t.registration.confirmationSubtitle}
           </p>
-          <dl className="mt-4 divide-y divide-slate-100 text-sm">
+          <dl className="mt-4 divide-y divide-white/10 text-sm">
             <SummaryRow label={t.auth.fullName} value={fullName} />
             <SummaryRow label={t.auth.email} value={email} />
             <SummaryRow label={t.auth.phone1} value={phone1} />
@@ -275,11 +278,11 @@ export function RegisterWizard() {
         </div>
       )}
 
-      {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
 
       <div className="mt-6 flex items-center justify-between">
         {step > 1 ? (
-          <Button type="button" variant="secondary" onClick={goBack} disabled={submitting}>
+          <Button type="button" variant="gold-outline" onClick={goBack} disabled={submitting}>
             {t.registration.back}
           </Button>
         ) : (
@@ -287,20 +290,20 @@ export function RegisterWizard() {
         )}
 
         {step < 4 ? (
-          <Button type="button" onClick={goNext}>
+          <Button type="button" variant="gold" onClick={goNext}>
             {t.registration.next}
           </Button>
         ) : (
-          <Button type="button" onClick={handleSubmit} disabled={submitting}>
+          <Button type="button" variant="gold" onClick={handleSubmit} disabled={submitting}>
             {submitting ? t.registration.submitting : t.registration.submit}
           </Button>
         )}
       </div>
 
       {step === 1 && (
-        <p className="mt-6 text-center text-sm text-slate-500">
+        <p className="mt-6 text-center text-sm text-warmgray">
           {t.auth.haveAccount}{" "}
-          <Link href="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+          <Link href="/login" className="font-medium text-gold hover:text-gold-light">
             {t.auth.login}
           </Link>
         </p>
@@ -312,8 +315,8 @@ export function RegisterWizard() {
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between py-2">
-      <dt className="text-slate-500">{label}</dt>
-      <dd className="text-right font-medium text-slate-900">{value}</dd>
+      <dt className="text-warmgray">{label}</dt>
+      <dd className="text-right font-medium text-ivory">{value}</dd>
     </div>
   );
 }

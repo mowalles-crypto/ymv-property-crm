@@ -34,14 +34,14 @@ export default function ForgotPasswordPage() {
   if (sent) {
     return (
       <div className="text-center">
-        <h1 className="text-xl font-semibold text-slate-900">
+        <h1 style={{ fontFamily: "var(--font-display)" }} className="text-2xl font-medium text-ivory">
           {t.auth.checkYourEmail}
         </h1>
         <Link
           href="/login"
-          className="mt-6 inline-block text-sm font-medium text-indigo-600 hover:text-indigo-500"
+          className="mt-6 inline-block text-sm font-medium text-gold hover:text-gold-light"
         >
-          {t.auth.login}
+          {t.auth.backToLogin}
         </Link>
       </div>
     );
@@ -49,31 +49,33 @@ export default function ForgotPasswordPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-slate-900">
-        {t.auth.forgotPassword}
+      <h1 style={{ fontFamily: "var(--font-display)" }} className="text-2xl font-medium text-ivory">
+        {t.auth.resetPassword}
       </h1>
+      <p className="mt-1 text-sm text-warmgray">{t.auth.forgotPasswordSubtitle}</p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <Input
           id="email"
           type="email"
           label={t.auth.email}
+          variant="dark"
           required
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-red-400">{error}</p>}
 
-        <Button type="submit" disabled={loading} className="w-full">
+        <Button type="submit" variant="gold" disabled={loading} className="w-full">
           {loading ? t.common.loading : t.auth.sendResetLink}
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-slate-500">
-        <Link href="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
-          {t.auth.login}
+      <p className="mt-6 text-center text-sm text-warmgray">
+        <Link href="/login" className="font-medium text-gold hover:text-gold-light">
+          {t.auth.backToLogin}
         </Link>
       </p>
     </div>

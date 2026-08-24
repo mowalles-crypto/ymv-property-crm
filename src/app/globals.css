@@ -10,13 +10,19 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
+  --font-display: var(--font-playfair);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* BIZRAEL brand palette — drawn from the logo (deep charcoal, champagne/
+     bronze gold gradient, soft warm gray). Used on the entry/auth portal
+     and as accent-only touches in the authenticated CRM shell. */
+  --color-charcoal: #121110;
+  --color-charcoal-light: #1c1a17;
+  --color-charcoal-lighter: #27241f;
+  --color-ivory: #f3ede0;
+  --color-gold-light: #ecd9a0;
+  --color-gold: #c9a24b;
+  --color-gold-dark: #8a6d3a;
+  --color-warmgray: #9c9488;
 }
 
 body {

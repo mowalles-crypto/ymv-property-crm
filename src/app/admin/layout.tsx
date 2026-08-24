@@ -8,7 +8,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   const user = await getCurrentUser();
 
   return (
-    <AppShell role="admin" userEmail={user?.email} title={t.app.name}>
+    <AppShell role="admin" userEmail={user?.email} title={t.app.fullName}>
       {children}
     </AppShell>
   );

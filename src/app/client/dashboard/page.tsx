@@ -11,7 +11,12 @@ export default async function ClientDashboardPage() {
   const supabase = await createClient();
   const currentYear = new Date().getFullYear();
 
-  const [{ data: properties }, { data: accountingRows }] = await Promise.all([
+  const [{ data: customer }, { data: properties }, { data: accountingRows }] = await Promise.all([
+    supabase
+      .from("customers")
+      .select("customer_name")
+      .eq("id", profile.customer_id!)
+      .single(),
     supabase
       .from("properties")
       .select("*")
@@ -36,7 +41,12 @@ export default async function ClientDashboardPage() {
 
   return (
     <div className="space-y-8">
-      <h2 className="text-lg font-semibold text-slate-900">{t.dashboard.client.title}</h2>
+      <div>
+        <h2 style={{ fontFamily: "var(--font-display)" }} className="text-xl font-medium text-slate-900">
+          {customer?.customer_name ? `Welcome, ${customer.customer_name}` : t.dashboard.client.title}
+        </h2>
+        <div className="mt-2 h-px w-12 bg-gradient-to-r from-gold-light via-gold to-gold-dark" />
+      </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
         <StatCard label={t.dashboard.client.myProperties} value={properties?.length ?? 0} />
