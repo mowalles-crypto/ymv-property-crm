@@ -26,6 +26,17 @@ const clientLinks = [
   { href: "/client/profile", label: t.nav.documentsAndProfile },
 ];
 
+// BIZRAEL Israel Real Estate Analytics - a separate, existing Streamlit
+// application on the same Supabase project. Linked here, never embedded
+// or duplicated. Admin-only: the `role` prop this component receives is
+// resolved server-side, before render, in app/admin/layout.tsx via
+// requireAdmin() -> lib/auth.ts's getCurrentProfile() (a fresh
+// `profiles.role` read for the authenticated user, via
+// supabase.auth.getUser() first) - never a URL param or client-side-only
+// value. A client can never reach this component with role="admin".
+const BIZRAEL_ANALYTICS_URL =
+  "https://bizrael-israel-realestate-analytics-y9uapdhr3k6ndyfvuovnvm.streamlit.app/";
+
 export function Sidebar({ role }: { role: UserRole }) {
   const pathname = usePathname();
   const links = role === "admin" ? adminLinks : clientLinks;
@@ -63,6 +74,27 @@ export function Sidebar({ role }: { role: UserRole }) {
           );
         })}
       </nav>
+      {role === "admin" && (
+        <div className="border-t border-slate-100 px-3 py-3">
+          <a
+            href={BIZRAEL_ANALYTICS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block rounded-md px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+          >
+            <span className="flex items-center gap-2">
+              <span aria-hidden="true">📊</span>
+              {t.nav.bizraelAnalytics}
+              <span aria-hidden="true" className="ml-auto text-slate-300">
+                ↗
+              </span>
+            </span>
+            <span className="mt-0.5 block pl-6 text-[11px] font-normal text-slate-400">
+              {t.nav.bizraelAnalyticsDescription}
+            </span>
+          </a>
+        </div>
+      )}
       <div className="border-t border-slate-100 px-5 py-3">
         <p className="text-[11px] tracking-wide text-slate-400">{t.app.tagline}</p>
       </div>

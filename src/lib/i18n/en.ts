@@ -32,6 +32,8 @@ const en = {
     investmentOffers: "Investment Opportunities",
     saleRequests: "Sale Requests",
     financialActivity: "Financial Activity",
+    bizraelAnalytics: "BIZRAEL Analytics",
+    bizraelAnalyticsDescription: "Market Analytics • Valuation • Forecasting",
   },
   auth: {
     login: "Log in",
